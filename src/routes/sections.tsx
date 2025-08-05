@@ -13,6 +13,13 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 // ----------------------------------------------------------------------
 
 export const DashboardPage = lazy(() => import('src/pages/dashboard'));
+export const StockCardsPage = lazy(() => import('src/pages/stock-cards'));
+export const StockTransactionsPage = lazy(() => import('src/pages/stock-transactions'));
+export const CompaniesPage = lazy(() => import('src/pages/companies'));
+export const BranchesPage = lazy(() => import('src/pages/branches'));
+export const WarehousesPage = lazy(() => import('src/pages/warehouses'));
+export const CategoriesPage = lazy(() => import('src/pages/categories'));
+export const UsersPage = lazy(() => import('src/pages/users'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
@@ -50,6 +57,13 @@ export const routesSection: RouteObject[] = [
     ),
     children: [
       { index: true, element: <DashboardPage /> },
+      { path: 'stock-cards', element: <StockCardsPage /> },
+      { path: 'stock-transactions', element: <StockTransactionsPage /> },
+      { path: 'companies', element: <CompaniesPage /> },
+      { path: 'branches', element: <BranchesPage /> },
+      { path: 'warehouses', element: <WarehousesPage /> },
+      { path: 'categories', element: <CategoriesPage /> },
+      { path: 'users', element: <UsersPage /> },
       { path: 'user', element: <UserPage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'blog', element: <BlogPage /> },

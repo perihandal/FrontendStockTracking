@@ -208,3 +208,31 @@ export const _notifications = [
     isUnRead: false,
   },
 ];
+
+export const _stockCards = [
+  {
+    id: 1,
+    name: 'Stok Kartı 1',
+    code: 'STK001',
+    type: 'NihaiUrun' as const,
+    unit: 'Adet',
+    tax: 18,
+    isActive: true,
+    createdDate: new Date().toISOString(),
+    companyId: 1,
+    company: { id: 1, name: 'Şirket A' },
+    branchId: 1,
+    branch: { id: 1, name: 'Merkez' },
+    mainGroupId: 1,
+    mainGroup: { id: 1, name: 'Ana Grup 1' },
+    subGroupId: 1,
+    subGroup: { id: 1, name: 'Alt Grup 1' },
+    categoryId: 1,
+    category: { id: 1, name: 'Kategori 1' },
+    createUserId: 1,
+    createUser: { id: 1, name: 'Admin' },
+    barcodeCards: [{ id: 1, code: '1234567890' }],
+    priceDefinitions: [{ id: 1, name: 'Fiyat 1' }],
+    stockTransactions: [{ id: 1, type: 'Giriş' }],
+  },
+];

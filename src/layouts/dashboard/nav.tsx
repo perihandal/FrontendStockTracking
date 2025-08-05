@@ -15,7 +15,6 @@ import { RouterLink } from 'src/routes/components';
 import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
 
-import { NavUpgrade } from '../components/nav-upgrade';
 import { WorkspacesPopover } from '../components/workspaces-popover';
 
 import type { NavItem } from '../nav-config-dashboard';
@@ -110,6 +109,8 @@ export function NavMobile({
 export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
   const pathname = usePathname();
 
+  console.log('NavContent render ediliyor:', { data, pathname });
+
   return (
     <>
       <Logo />
@@ -140,6 +141,8 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
           >
             {data.map((item) => {
               const isActived = item.path === pathname;
+
+              console.log('Menü öğesi render ediliyor:', item.title, isActived);
 
               return (
                 <ListItem disableGutters disablePadding key={item.title}>
@@ -187,8 +190,6 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
       </Scrollbar>
 
       {slots?.bottomArea}
-
-      <NavUpgrade />
     </>
   );
 }

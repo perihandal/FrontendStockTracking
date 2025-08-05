@@ -19,33 +19,46 @@ export const navData = [
     icon: icon('ic-analytics'),
   },
   {
-    title: 'User',
-    path: '/user',
-    icon: icon('ic-user'),
+    title: 'Stok Kartları',
+    path: '/stock-cards',
+    icon: icon('ic-box'),
   },
   {
-    title: 'Product',
-    path: '/products',
+    title: 'Stok İşlemleri',
+    path: '/stock-transactions',
     icon: icon('ic-cart'),
     info: (
       <Label color="error" variant="inverted">
-        +3
+        +5
       </Label>
     ),
   },
   {
-    title: 'Blog',
-    path: '/blog',
+    title: 'Şirketler',
+    path: '/companies',
+    icon: icon('ic-user'),
+  },
+  {
+    title: 'Şubeler',
+    path: '/branches',
     icon: icon('ic-blog'),
   },
   {
-    title: 'Sign in',
-    path: '/sign-in',
+    title: 'Depolar',
+    path: '/warehouses',
     icon: icon('ic-lock'),
   },
   {
-    title: 'Not found',
-    path: '/404',
+    title: 'Kategoriler',
+    path: '/categories',
     icon: icon('ic-disabled'),
   },
+  {
+    title: 'Kullanıcılar',
+    path: '/users',
+    icon: icon('ic-user'),
+  },
 ];
+
+// Debug için console.log ekleyelim
+console.log('navData yüklendi:', navData);

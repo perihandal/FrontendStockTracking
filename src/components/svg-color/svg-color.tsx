@@ -9,6 +9,8 @@ import type { SvgColorProps } from './types';
 // ----------------------------------------------------------------------
 
 export function SvgColor({ src, className, sx, ...other }: SvgColorProps) {
+  console.log('SvgColor render ediliyor:', src);
+  
   return (
     <SvgRoot
       className={mergeClasses([svgColorClasses.root, className])}
