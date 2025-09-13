@@ -12,7 +12,11 @@ type StockTransactionsTableToolbarProps = {
   onFilterName: (event: ChangeEvent<HTMLInputElement>) => void;
 };
 
-export function StockTransactionsTableToolbar({ filterName, onFilterName }: StockTransactionsTableToolbarProps) {
+export function StockTransactionsTableToolbar({ 
+  filterName, 
+  onFilterName
+}: StockTransactionsTableToolbarProps) {
+
   return (
     <Box
       sx={{

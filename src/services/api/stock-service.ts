@@ -43,10 +43,15 @@ export interface StockCardDto {
   unit: string;
   tax: number;
   createdDate: string;
+  companyId: number;
   companyName: string;
+  branchId: number;
   branchName: string;
+  mainGroupId: number;
   mainGroupName: string;
+  subGroupId?: number;
   subGroupName?: string;
+  categoryId?: number;
   categoryName?: string;
   barcodes: string[];
 }

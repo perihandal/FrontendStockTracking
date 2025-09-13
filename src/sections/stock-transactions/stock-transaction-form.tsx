@@ -17,7 +17,7 @@ import { Iconify } from 'src/components/iconify';
 import { StockService } from 'src/services/api/stock-service';
 import { WarehouseService } from 'src/services/api/warehouse-service';
 
-type StockTransactionFormData = {
+export type StockTransactionFormData = {
   transactionType: 'Giriş' | 'Çıkış' | 'Transfer';
   quantity: number;
   documentNumber: string;
@@ -33,11 +33,16 @@ type StockCard = {
   id: number;
   name: string;
   code: string;
+  companyId: number;
 };
 
 type Warehouse = {
   id: number;
   name: string;
+  companyId: number;
+  companyName: string;
+  branchId: number;
+  branchName: string;
 };
 
 type StockTransactionFormProps = {
@@ -60,9 +65,11 @@ export function StockTransactionForm({
     queryKey: ['stockCards'],
     queryFn: async () => {
       const result = await StockService.getStockCards();
+      console.log('🔍 Debug - Raw stock cards API response:', result);
       if (!result.success) {
         throw new Error(result.message || 'Failed to fetch stock cards');
       }
+      console.log('🔍 Debug - Stock cards data from API:', result.data);
       return result.data;
     },
   });
@@ -71,15 +78,17 @@ export function StockTransactionForm({
     queryKey: ['warehouses'],
     queryFn: async () => {
       const result = await WarehouseService.getWarehouses();
+      console.log('🔍 Debug - Raw warehouses API response:', result);
       if (!result.success) {
         throw new Error(result.message || 'Failed to fetch warehouses');
       }
+      console.log('🔍 Debug - Warehouses data from API:', result.data);
       return result.data;
     },
   });
 
   const stockCards = Array.isArray(stockCardsResponse) ? stockCardsResponse : [];
-  const warehouses = Array.isArray(warehousesResponse) ? warehousesResponse : [];
+  const allWarehouses = Array.isArray(warehousesResponse) ? warehousesResponse : [];
 
   const [formData, setFormData] = useState<StockTransactionFormData>({
     transactionType: 'Giriş',
@@ -94,6 +103,39 @@ export function StockTransactionForm({
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [selectedStockCardCompanyId, setSelectedStockCardCompanyId] = useState<number | null>(null);
+  const [selectedStockCardCompanyName, setSelectedStockCardCompanyName] = useState<string | null>(null);
+  
+  // Seçilen stok kartının company ID'sine göre depoları filtrele
+  const warehouses = React.useMemo(() => {
+    if (!selectedStockCardCompanyId && !selectedStockCardCompanyName) {
+      console.log('🔍 Debug - No company info selected, showing all warehouses');
+      return allWarehouses;
+    }
+    
+    console.log('🔍 Debug - Filtering warehouses for:', {
+      companyId: selectedStockCardCompanyId,
+      companyName: selectedStockCardCompanyName
+    });
+    console.log('🔍 Debug - allWarehouses before filter:', allWarehouses);
+    
+    const filtered = allWarehouses.filter(warehouse => {
+      // Önce companyId ile filtrele, yoksa companyName ile filtrele
+      let matches = false;
+      
+      if (selectedStockCardCompanyId && warehouse.companyId) {
+        matches = warehouse.companyId === selectedStockCardCompanyId;
+      } else if (selectedStockCardCompanyName && warehouse.companyName) {
+        matches = warehouse.companyName === selectedStockCardCompanyName;
+      }
+      
+      console.log(`🔍 Debug - Warehouse ${warehouse.name} (companyId: ${warehouse.companyId}, companyName: ${warehouse.companyName}) matches:`, matches);
+      return matches;
+    });
+    
+    console.log('🔍 Debug - filtered warehouses after filter:', filtered);
+    return filtered;
+  }, [selectedStockCardCompanyId, selectedStockCardCompanyName, allWarehouses]);
 
   useEffect(() => {
     if (initialData) {
@@ -108,6 +150,36 @@ export function StockTransactionForm({
       // Transaction type değiştiğinde warehouseId'yi temizle
       if (field === 'transactionType' && value === 'Transfer') {
         newFormData.warehouseId = undefined;
+      }
+      
+      // Stok kartı seçildiğinde company ID'sini al ve depo seçimlerini temizle
+      if (field === 'stockCardId') {
+        console.log('🔍 Debug - Stock card selection changed to:', value);
+        console.log('🔍 Debug - Available stock cards:', stockCards);
+        
+        const selectedCard = stockCards.find(card => card.id === value);
+        console.log('🔍 Debug - selectedCard found:', selectedCard);
+        
+        if (selectedCard) {
+          console.log('🔍 Debug - Card details:', {
+            id: selectedCard.id,
+            name: selectedCard.name,
+            companyId: selectedCard.companyId,
+            companyName: selectedCard.companyName
+          });
+          console.log('🔍 Debug - setting companyId to:', selectedCard.companyId);
+          console.log('🔍 Debug - setting companyName to:', selectedCard.companyName);
+          setSelectedStockCardCompanyId(selectedCard.companyId);
+          setSelectedStockCardCompanyName(selectedCard.companyName);
+          // Depo seçimlerini temizle çünkü yeni şirkete göre filtreleme yapılacak
+          newFormData.warehouseId = undefined;
+          newFormData.fromWarehouseId = undefined;
+          newFormData.toWarehouseId = undefined;
+        } else {
+          console.log('🔍 Debug - no card found, setting company info to null');
+          setSelectedStockCardCompanyId(null);
+          setSelectedStockCardCompanyName(null);
+        }
       }
       
       return newFormData;
@@ -274,16 +346,28 @@ export function StockTransactionForm({
                   label="Depo"
                   onChange={(e) => handleInputChange('warehouseId', e.target.value ? Number(e.target.value) : undefined)}
                 >
-                  <MenuItem value=""><em>Depo seçin</em></MenuItem>
+                  <MenuItem value="">
+                    <em>
+                      {selectedStockCardCompanyId 
+                        ? 'Stok kartının şirketine ait depolar yükleniyor...' 
+                        : 'Önce stok kartı seçin'
+                      }
+                    </em>
+                  </MenuItem>
                   {warehouses.map((warehouse) => (
                     <MenuItem key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
+                      {warehouse.name} ({warehouse.companyName})
                     </MenuItem>
                   ))}
                 </Select>
                 {errors.warehouseId && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
                     {errors.warehouseId}
+                  </Typography>
+                )}
+                {selectedStockCardCompanyId && warehouses.length === 0 && (
+                  <Typography variant="caption" color="info" sx={{ mt: 0.5 }}>
+                    Bu şirkete ait aktif depo bulunamadı
                   </Typography>
                 )}
               </FormControl>
@@ -301,17 +385,27 @@ export function StockTransactionForm({
                   onChange={(e) => handleInputChange('fromWarehouseId', e.target.value ? Number(e.target.value) : undefined)}
                 >
                   <MenuItem value="">
-                    <em>Kaynak depo seçin</em>
+                    <em>
+                      {selectedStockCardCompanyId 
+                        ? 'Stok kartının şirketine ait depolar yükleniyor...' 
+                        : 'Önce stok kartı seçin'
+                      }
+                    </em>
                   </MenuItem>
                   {warehouses.map((warehouse) => (
                     <MenuItem key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
+                      {warehouse.name} ({warehouse.companyName})
                     </MenuItem>
                   ))}
                 </Select>
                 {errors.fromWarehouseId && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
                     {errors.fromWarehouseId}
+                  </Typography>
+                )}
+                {selectedStockCardCompanyId && warehouses.length === 0 && (
+                  <Typography variant="caption" color="info" sx={{ mt: 0.5 }}>
+                    Bu şirkete ait aktif depo bulunamadı
                   </Typography>
                 )}
               </FormControl>
@@ -324,17 +418,27 @@ export function StockTransactionForm({
                   onChange={(e) => handleInputChange('toWarehouseId', e.target.value ? Number(e.target.value) : undefined)}
                 >
                   <MenuItem value="">
-                    <em>Hedef depo seçin</em>
+                    <em>
+                      {selectedStockCardCompanyId 
+                        ? 'Stok kartının şirketine ait depolar yükleniyor...' 
+                        : 'Önce stok kartı seçin'
+                      }
+                    </em>
                   </MenuItem>
                   {warehouses.map((warehouse) => (
                     <MenuItem key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
+                      {warehouse.name} ({warehouse.companyName})
                     </MenuItem>
                   ))}
                 </Select>
                 {errors.toWarehouseId && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
                     {errors.toWarehouseId}
+                  </Typography>
+                )}
+                {selectedStockCardCompanyId && warehouses.length === 0 && (
+                  <Typography variant="caption" color="info" sx={{ mt: 0.5 }}>
+                    Bu şirkete ait aktif depo bulunamadı
                   </Typography>
                 )}
               </FormControl>

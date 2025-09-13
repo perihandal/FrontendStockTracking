@@ -15,6 +15,7 @@ import { Iconify } from 'src/components/iconify';
 type CompanyFormData = {
   code: string;
   name: string;
+  taxNumber: string;
   address: string;
   phone: string;
   email: string;

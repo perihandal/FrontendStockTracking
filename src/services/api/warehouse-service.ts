@@ -65,6 +65,23 @@ export class WarehouseService {
     };
   }
 
+  static async getWarehousesByCompanyId(companyId: number): Promise<ApiResponse<WarehouseDto[]>> {
+    const response = await apiClient.get<{data: WarehouseDto[], errorMessage: string | null}>('/api/warehouse');
+    if (response.data.data) {
+      const filteredWarehouses = response.data.data.filter(warehouse => warehouse.companyId === companyId);
+      return {
+        success: true,
+        data: filteredWarehouses,
+        message: 'Warehouses fetched successfully'
+      };
+    }
+    return {
+      success: true,
+      data: [],
+      message: 'Warehouses fetched successfully'
+    };
+  }
+
   static async createWarehouse(data: CreateWarehouseRequest): Promise<ApiResponse<{ id: number }>> {
     const response = await apiClient.post('/api/warehouse', data);
     return response.data;

@@ -24,22 +24,14 @@ import TablePagination from '@mui/material/TablePagination';
 
 import { Iconify } from 'src/components/iconify';
 import StockTransactionService, { type StockTransactionDto, type CreateStockTransactionRequest, type UpdateStockTransactionRequest } from 'src/services/api/stock-transaction-service';
+import { ReportService } from 'src/services/api/report-service';
 import { useAuth } from 'src/contexts/auth-context';
-import { mapEnumToTransactionType } from 'src/utils/stock-card-utils';
+import { mapEnumToTransactionType, mapFormTransactionTypeToEnum } from 'src/utils/stock-card-utils';
 
-import { StockTransactionForm } from '../stock-transaction-form';
+import { StockTransactionForm, type StockTransactionFormData } from '../stock-transaction-form';
 import { StockTransactionsTableRow } from '../stock-transactions-table-row';
 import { StockTransactionsTableToolbar } from '../stock-transactions-table-toolbar';
 
-type StockTransactionFormData = {
-  transactionType: 'Giris' | 'Cikis' | 'Transfer';
-  quantity: number;
-  documentNumber: string;
-  description: string;
-  stockCardId: number | undefined;
-  warehouseId: number | undefined;
-  transactionDate: string;
-};
 
 export function StockTransactionsView() {
   const { user } = useAuth();
@@ -75,6 +67,7 @@ export function StockTransactionsView() {
   });
 
   const stockTransactions = Array.isArray(stockTransactionsResponse) ? stockTransactionsResponse : [];
+
 
   // Create stock transaction mutation
   const createStockTransactionMutation = useMutation({
@@ -225,7 +218,7 @@ export function StockTransactionsView() {
     if (editMode && selectedTransaction) {
       // Update existing stock transaction
       const updateData: UpdateStockTransactionRequest = {
-        type: formData.transactionType,
+        type: mapFormTransactionTypeToEnum(formData.transactionType) as any,
         quantity: formData.quantity,
         transactionDate: new Date(formData.transactionDate).toISOString(),
         documentNumber: formData.documentNumber,
@@ -235,14 +228,13 @@ export function StockTransactionsView() {
         warehouseId: formData.transactionType === 'Transfer' ? undefined : formData.warehouseId,
         fromWarehouseId: formData.fromWarehouseId,
         toWarehouseId: formData.toWarehouseId,
-        userId: Number(user.id),
       };
       
       updateStockTransactionMutation.mutate({ id: selectedTransaction.id, data: updateData });
     } else {
       // Create new stock transaction
       const createData: CreateStockTransactionRequest = {
-        type: formData.transactionType,
+        type: mapFormTransactionTypeToEnum(formData.transactionType) as any,
         quantity: formData.quantity,
         transactionDate: new Date(formData.transactionDate).toISOString(),
         documentNumber: formData.documentNumber,
@@ -266,11 +258,22 @@ export function StockTransactionsView() {
   };
 
   const handleDownloadReport = () => {
-    setSnackbar({
-      open: true,
-      message: 'Rapor indirme özelliği yakında eklenecek!',
-      severity: 'info',
-    });
+    // Excel raporu indir
+    try {
+      ReportService.generateStockTransactionsReport(stockTransactions);
+      setSnackbar({
+        open: true,
+        message: 'Excel raporu başarıyla indirildi!',
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error('❌ Excel raporu indirme hatası:', error);
+      setSnackbar({
+        open: true,
+        message: 'Excel raporu indirilemedi!',
+        severity: 'error',
+      });
+    }
   };
 
   const handleCloseSnackbar = () => {

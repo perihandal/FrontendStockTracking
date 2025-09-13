@@ -56,3 +56,13 @@ export const mapEnumToTransactionType = (enumValue: number): string => {
   };
   return typeMapping[enumValue] || 'Giris'; // Default to Giris if not found
 };
+
+// Map form TransactionType to backend TransactionType
+export const mapFormTransactionTypeToEnum = (type: string): string => {
+  const typeMapping: Record<string, string> = {
+    'Giriş': 'Giris',
+    'Çıkış': 'Cikis',
+    'Transfer': 'Transfer'
+  };
+  return typeMapping[type] || 'Giris'; // Default to Giris if not found
+};

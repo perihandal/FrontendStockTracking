@@ -13,6 +13,9 @@ export { default as CategoryService } from './category-service';
 
 // Warehouse Service
 export { default as WarehouseService } from './warehouse-service';
+
+// Report Service
+export { default as ReportService } from './report-service';
 export type { 
   User, 
   LoginRequest, 
