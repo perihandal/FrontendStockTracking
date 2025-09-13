@@ -1,21 +1,22 @@
-import type { StockCard, StockCardType } from 'src/types/stock';
+import type { StockCardDto, StockCardType } from 'src/services/api';
 
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import {
   Box,
-  Card,
   Button,
   Select,
-  Switch,
   Divider,
   MenuItem,
   TextField,
   InputLabel,
   Typography,
   FormControl,
-  FormControlLabel,
+  CircularProgress,
 } from '@mui/material';
+
+import { CompanyService, CategoryService } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -26,72 +27,168 @@ interface StockCardFormProps {
     type: StockCardType;
     unit: string;
     tax: number;
-    isActive: boolean;
-    companyId: number;
-    branchId: number;
-    mainGroupId: number;
+    companyId?: number;
+    branchId?: number;
+    mainGroupId?: number;
     subGroupId?: number;
     categoryId?: number;
   }) => void;
-  onCancel: () => void;
+  editMode?: boolean;
+  selected?: StockCardDto | null;
   isLoading?: boolean;
-  initialData?: StockCard;
-  isEditMode?: boolean;
 }
 
-// Mock veriler - gerçek uygulamada API'den gelecek
-const mockCompanies = [
-  { id: 1, name: 'ABC Şirketi' },
-  { id: 2, name: 'XYZ Şirketi' },
-];
-
-const mockBranches = [
-  { id: 1, name: 'Merkez Şube' },
-  { id: 2, name: 'İstanbul Şube' },
-];
-
-const mockMainGroups = [
-  { id: 1, name: 'Hammaddeler' },
-  { id: 2, name: 'Yarı Mamüller' },
-  { id: 3, name: 'Mamüller' },
-];
-
-const mockSubGroups = [
-  { id: 1, name: 'Metaller', mainGroupId: 1 },
-  { id: 2, name: 'Plastikler', mainGroupId: 1 },
-  { id: 3, name: 'Bağlantı Elemanları', mainGroupId: 2 },
-];
-
-const mockCategories = [
-  { id: 1, name: 'Çelik Ürünleri', subGroupId: 1 },
-  { id: 2, name: 'Alüminyum Ürünleri', subGroupId: 1 },
-  { id: 3, name: 'Vidalar', subGroupId: 3 },
-];
-
+// Stock card types - Backend enum'ları ile uyumlu
 const stockCardTypes: { value: StockCardType; label: string }[] = [
   { value: 'Hammadde', label: 'Hammadde' },
-  { value: 'YarıMamul', label: 'Yarı Mamul' },
-  { value: 'Mamul', label: 'Mamul' },
+  { value: 'AraUrun', label: 'Ara Ürün' },
+  { value: 'NihaiUrun', label: 'Nihai Ürün' },
 ];
 
 const units = ['Adet', 'Kg', 'Litre', 'Metre', 'Metrekare', 'Metreküp', 'Paket', 'Kutu'];
 
-export function StockCardForm({ onSubmit, onCancel, isLoading = false, initialData, isEditMode = false }: StockCardFormProps) {
-  const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    code: initialData?.code || '',
-    type: initialData?.type || 'Hammadde' as StockCardType,
-    unit: initialData?.unit || 'Adet',
-    tax: initialData?.tax || 18,
-    isActive: initialData?.isActive ?? true,
-    companyId: initialData?.companyId || 1,
-    branchId: initialData?.branchId || 1,
-    mainGroupId: initialData?.mainGroupId || 1,
-    subGroupId: initialData?.subGroupId,
-    categoryId: initialData?.categoryId,
+export function StockCardForm({ onSubmit, editMode = false, selected, isLoading = false }: StockCardFormProps) {
+  const [formData, setFormData] = useState<{
+    name: string;
+    code: string;
+    type: StockCardType;
+    unit: string;
+    tax: number;
+    companyId?: number;
+    branchId?: number;
+    mainGroupId?: number;
+    subGroupId?: number;
+    categoryId?: number;
+  }>({
+    name: selected?.name || '',
+    code: selected?.code || '',
+    type: selected?.type || 'Hammadde' as StockCardType,
+    unit: selected?.unit || 'Adet',
+    tax: selected?.tax || 18,
+    companyId: undefined, // No default value
+    branchId: undefined,  // No default value
+    mainGroupId: undefined, // No default value
+    subGroupId: undefined,
+    categoryId: undefined,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // API Queries with error handling
+  const { data: companiesResponse, error: companiesError, isLoading: companiesLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      try {
+        console.log('🔍 Fetching companies from:', CompanyService.getCompanies);
+        const result = await CompanyService.getCompanies();
+        console.log('✅ Companies API result:', result);
+        console.log('✅ Companies data:', result?.data);
+        console.log('✅ Companies success:', result?.success);
+        if (!result?.success) {
+          console.error('❌ Companies API returned success: false');
+          console.error('❌ Companies API message:', result?.message);
+        }
+        return result;
+      } catch (error) {
+        console.error('❌ Companies API error:', error);
+        console.error('❌ Companies API error details:', {
+          message: error.message,
+          response: error.response,
+          request: error.request
+        });
+        throw error;
+      }
+    },
+    staleTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+  const { data: branchesResponse, error: branchesError, isLoading: branchesLoading } = useQuery({
+    queryKey: ['branches'],
+    queryFn: async () => {
+      try {
+        console.log('🔍 Fetching branches from:', CompanyService.getBranches);
+        const result = await CompanyService.getBranches();
+        console.log('✅ Branches API result:', result);
+        console.log('✅ Branches data:', result?.data);
+        console.log('✅ Branches success:', result?.success);
+        if (!result?.success) {
+          console.error('❌ Branches API returned success: false');
+          console.error('❌ Branches API message:', result?.message);
+        }
+        return result;
+      } catch (error) {
+        console.error('❌ Branches API error:', error);
+        console.error('❌ Branches API error details:', {
+          message: error.message,
+          response: error.response,
+          request: error.request
+        });
+        throw error;
+      }
+    },
+    staleTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+  const { data: mainGroupsResponse, error: mainGroupsError, isLoading: mainGroupsLoading } = useQuery({
+    queryKey: ['mainGroups'],
+    queryFn: async () => {
+      console.log('🔍 Fetching main groups from:', CategoryService.getMainGroups);
+      const result = await CategoryService.getMainGroups();
+      console.log('✅ Main groups API result:', result);
+      console.log('✅ Main groups data:', result?.data);
+      return result;
+    },
+    staleTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+  const { data: subGroupsResponse, error: subGroupsError, isLoading: subGroupsLoading } = useQuery({
+    queryKey: ['subGroups', formData.mainGroupId],
+    queryFn: async () => {
+      console.log('🔍 Fetching sub groups for main group:', formData.mainGroupId);
+      console.log('🔍 From:', CategoryService.getSubGroupsByMainGroup);
+      if (!formData.mainGroupId) throw new Error('MainGroupId is required');
+      const result = await CategoryService.getSubGroupsByMainGroup(formData.mainGroupId);
+      console.log('✅ Sub groups API result:', result);
+      console.log('✅ Sub groups data:', result?.data);
+      return result;
+    },
+    enabled: !!formData.mainGroupId,
+    staleTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+  const { data: categoriesResponse, error: categoriesError, isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      console.log('🔍 Fetching categories from:', CategoryService.getCategories);
+      const result = await CategoryService.getCategories();
+      console.log('✅ Categories API result:', result);
+      console.log('✅ Categories data:', result?.data);
+      return result;
+    },
+    staleTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+
+
+
+
+  // Data processing
+  const companies = companiesResponse?.data || [];
+  const branches = branchesResponse?.data || [];
+  const mainGroups = mainGroupsResponse?.data || [];
+  const subGroups = subGroupsResponse?.data || [];
+  const categories = categoriesResponse?.data || [];
+
+  // Filter branches by selected company
+  const filteredBranches = branches.filter(branch => branch.companyId === formData.companyId);
+
+  // Filter categories by selected branch
+  const filteredCategories = categories.filter(category => category.branchId === formData.branchId);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -101,11 +198,37 @@ export function StockCardForm({ onSubmit, onCancel, isLoading = false, initialDa
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
 
-    // Alt grup ve kategori sıfırla
-    if (field === 'mainGroupId') {
-      setFormData(prev => ({ ...prev, subGroupId: undefined, categoryId: undefined }));
+    // Cascade updates
+    if (field === 'companyId') {
+      setFormData(prev => ({
+        ...prev,
+        companyId: value,
+        branchId: undefined, // Reset branch selection
+        mainGroupId: undefined, // Reset main group selection
+        subGroupId: undefined, // Reset sub group selection
+        categoryId: undefined, // Reset category selection
+      }));
+    } else if (field === 'branchId') {
+      setFormData(prev => ({
+        ...prev,
+        branchId: value,
+        mainGroupId: undefined, // Reset main group selection
+        subGroupId: undefined, // Reset sub group selection
+        categoryId: undefined, // Reset category selection
+      }));
+    } else if (field === 'mainGroupId') {
+      setFormData(prev => ({
+        ...prev,
+        mainGroupId: value,
+        subGroupId: undefined, // Reset sub group selection
+        categoryId: undefined, // Reset category selection
+      }));
     } else if (field === 'subGroupId') {
-      setFormData(prev => ({ ...prev, categoryId: undefined }));
+      setFormData(prev => ({
+        ...prev,
+        subGroupId: value,
+        categoryId: undefined, // Reset category selection
+      }));
     }
   };
 
@@ -113,16 +236,25 @@ export function StockCardForm({ onSubmit, onCancel, isLoading = false, initialDa
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Stok kartı adı zorunludur';
+      newErrors.name = 'Stok kartı adı gereklidir';
     }
-
     if (!formData.code.trim()) {
-      newErrors.code = 'Stok kartı kodu zorunludur';
+      newErrors.code = 'Stok kartı kodu gereklidir';
     }
-
     if (formData.tax < 0 || formData.tax > 100) {
       newErrors.tax = 'Vergi oranı 0-100 arasında olmalıdır';
     }
+
+    // Optional fields - artık zorunlu değil
+    // if (!formData.companyId) {
+    //   newErrors.companyId = 'Şirket seçimi gereklidir';
+    // }
+    // if (!formData.branchId) {
+    //   newErrors.branchId = 'Şube seçimi gereklidir';
+    // }
+    // if (!formData.mainGroupId) {
+    //   newErrors.mainGroupId = 'Ana grup seçimi gereklidir';
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -131,205 +263,272 @@ export function StockCardForm({ onSubmit, onCancel, isLoading = false, initialDa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔍 Form submit - formData:', JSON.stringify(formData, null, 2));
+    console.log('🔍 Form validation result:', validateForm());
+    
     if (validateForm()) {
       onSubmit(formData);
     }
   };
 
-  // Filtrelenmiş veriler
-  const filteredSubGroups = mockSubGroups.filter(group => group.mainGroupId === formData.mainGroupId);
-  const filteredCategories = mockCategories.filter(category => category.subGroupId === formData.subGroupId);
-
   return (
-    <Card sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <Iconify icon="solar:cart-3-bold" sx={{ mr: 1 }} />
-        <Typography variant="h6">
-          {isEditMode ? 'Stok Kartı Düzenle' : 'Yeni Stok Kartı'}
-        </Typography>
-      </Box>
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+      <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+        {/* Basic Information */}
+        <TextField
+          fullWidth
+          label="Stok Kartı Adı"
+          value={formData.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          error={!!errors.name}
+          helperText={errors.name}
+          disabled={isLoading}
+        />
 
-      <Box component="form" onSubmit={handleSubmit}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <TextField
-            label="Stok Kartı Adı"
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            error={!!errors.name}
-            helperText={errors.name}
-            sx={{ flex: '1 1 45%' }}
-            required
-          />
-          <TextField
-            label="Stok Kartı Kodu"
-            value={formData.code}
-            onChange={(e) => handleInputChange('code', e.target.value)}
-            error={!!errors.code}
-            helperText={errors.code}
-            sx={{ flex: '1 1 45%' }}
-            required
-          />
-        </Box>
+        <TextField
+          fullWidth
+          label="Stok Kartı Kodu"
+          value={formData.code}
+          onChange={(e) => handleInputChange('code', e.target.value)}
+          error={!!errors.code}
+          helperText={errors.code}
+          disabled={isLoading}
+        />
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <FormControl sx={{ flex: '1 1 45%' }}>
-            <InputLabel>Stok Kartı Tipi</InputLabel>
-            <Select
-              value={formData.type}
-              onChange={(e) => handleInputChange('type', e.target.value)}
-              label="Stok Kartı Tipi"
-            >
-              {stockCardTypes.map((type) => (
-                <MenuItem key={type.value} value={type.value}>
-                  {type.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ flex: '1 1 45%' }}>
-            <InputLabel>Birim</InputLabel>
-            <Select
-              value={formData.unit}
-              onChange={(e) => handleInputChange('unit', e.target.value)}
-              label="Birim"
-            >
-              {units.map((unit) => (
-                <MenuItem key={unit} value={unit}>
-                  {unit}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
+        <FormControl fullWidth error={!!errors.type}>
+          <InputLabel>Stok Kartı Tipi</InputLabel>
+          <Select
+            value={formData.type}
+            label="Stok Kartı Tipi"
+            onChange={(e) => handleInputChange('type', e.target.value)}
+            disabled={isLoading}
+          >
+            {stockCardTypes.map((type) => (
+              <MenuItem key={type.value} value={type.value}>
+                {type.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <TextField
-            label="Vergi Oranı (%)"
-            type="number"
-            value={formData.tax}
-            onChange={(e) => handleInputChange('tax', Number(e.target.value))}
-            error={!!errors.tax}
-            helperText={errors.tax}
-            sx={{ flex: '1 1 45%' }}
-            inputProps={{ min: 0, max: 100 }}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.isActive}
-                onChange={(e) => handleInputChange('isActive', e.target.checked)}
-              />
-            }
-            label="Aktif"
-            sx={{ flex: '1 1 45%', alignItems: 'center' }}
-          />
-        </Box>
+        <FormControl fullWidth>
+          <InputLabel>Birim</InputLabel>
+          <Select
+            value={formData.unit}
+            label="Birim"
+            onChange={(e) => handleInputChange('unit', e.target.value)}
+            disabled={isLoading}
+          >
+            {units.map((unit) => (
+              <MenuItem key={unit} value={unit}>
+                {unit}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-        <Divider sx={{ my: 2 }} />
+        <TextField
+          fullWidth
+          label="Vergi Oranı (%)"
+          type="number"
+          value={formData.tax}
+          onChange={(e) => handleInputChange('tax', parseFloat(e.target.value) || 0)}
+          error={!!errors.tax}
+          helperText={errors.tax}
+          disabled={isLoading}
+          inputProps={{ min: 0, max: 100, step: 0.01 }}
+        />
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <FormControl sx={{ flex: '1 1 45%' }}>
-            <InputLabel>Şirket</InputLabel>
-            <Select
-              value={formData.companyId}
-              onChange={(e) => handleInputChange('companyId', Number(e.target.value))}
-              label="Şirket"
-            >
-              {mockCompanies.map((company) => (
+        <Box /> {/* Empty box for grid alignment */}
+
+        <Divider sx={{ gridColumn: '1 / -1' }} />
+
+        {/* Company and Branch Selection */}
+        <FormControl fullWidth error={!!errors.companyId}>
+          <InputLabel>Şirket</InputLabel>
+          <Select
+            value={formData.companyId || ''}
+            label="Şirket"
+            onChange={(e) => handleInputChange('companyId', e.target.value || undefined)}
+            disabled={isLoading || companiesLoading}
+          >
+            <MenuItem value="">
+              <em>Şirket Seçiniz</em>
+            </MenuItem>
+            {companiesLoading ? (
+              <MenuItem disabled>
+                <CircularProgress size={20} /> Yükleniyor...
+              </MenuItem>
+            ) : companiesError ? (
+              <MenuItem disabled>
+                Hata: Şirketler yüklenemedi ({companiesError.message})
+              </MenuItem>
+            ) : companies.length === 0 ? (
+              <MenuItem disabled>
+                Hiç şirket bulunamadı
+              </MenuItem>
+            ) : (
+              companies.map((company) => (
                 <MenuItem key={company.id} value={company.id}>
                   {company.name}
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ flex: '1 1 45%' }}>
-            <InputLabel>Şube</InputLabel>
-            <Select
-              value={formData.branchId}
-              onChange={(e) => handleInputChange('branchId', Number(e.target.value))}
-              label="Şube"
-            >
-              {mockBranches.map((branch) => (
+              ))
+            )}
+          </Select>
+          {errors.companyId && (
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+              {errors.companyId}
+            </Typography>
+          )}
+        </FormControl>
+
+        <FormControl fullWidth error={!!errors.branchId}>
+          <InputLabel>Şube</InputLabel>
+          <Select
+            value={formData.branchId || ''}
+            label="Şube"
+            onChange={(e) => handleInputChange('branchId', e.target.value || undefined)}
+            disabled={isLoading || !formData.companyId || branchesLoading}
+          >
+            <MenuItem value="">
+              <em>Şube Seçiniz</em>
+            </MenuItem>
+            {branchesLoading ? (
+              <MenuItem disabled>
+                <CircularProgress size={20} /> Yükleniyor...
+              </MenuItem>
+            ) : branchesError ? (
+              <MenuItem disabled>
+                Hata: Şubeler yüklenemedi ({branchesError.message})
+              </MenuItem>
+            ) : filteredBranches.length === 0 ? (
+              <MenuItem disabled>
+                {formData.companyId ? 'Bu şirkete ait şube bulunamadı' : 'Önce şirket seçiniz'}
+              </MenuItem>
+            ) : (
+              filteredBranches.map((branch) => (
                 <MenuItem key={branch.id} value={branch.id}>
                   {branch.name}
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
+              ))
+            )}
+          </Select>
+          {errors.branchId && (
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+              {errors.branchId}
+            </Typography>
+          )}
+        </FormControl>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <FormControl sx={{ flex: '1 1 45%' }}>
-            <InputLabel>Ana Grup</InputLabel>
-            <Select
-              value={formData.mainGroupId}
-              onChange={(e) => handleInputChange('mainGroupId', Number(e.target.value))}
-              label="Ana Grup"
-            >
-              {mockMainGroups.map((group) => (
-                <MenuItem key={group.id} value={group.id}>
-                  {group.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ flex: '1 1 45%' }}>
-            <InputLabel>Alt Grup</InputLabel>
-            <Select
-              value={formData.subGroupId || ''}
-              onChange={(e) => handleInputChange('subGroupId', e.target.value ? Number(e.target.value) : undefined)}
-              label="Alt Grup"
-            >
-              <MenuItem value="">
-                <em>Seçiniz</em>
-              </MenuItem>
-              {filteredSubGroups.map((group) => (
-                <MenuItem key={group.id} value={group.id}>
-                  {group.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
+        <Divider sx={{ gridColumn: '1 / -1' }} />
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <FormControl sx={{ flex: '1 1 45%' }}>
-            <InputLabel>Kategori</InputLabel>
-            <Select
-              value={formData.categoryId || ''}
-              onChange={(e) => handleInputChange('categoryId', e.target.value ? Number(e.target.value) : undefined)}
-              label="Kategori"
-            >
-              <MenuItem value="">
-                <em>Seçiniz</em>
+        {/* Category Selection */}
+        <FormControl fullWidth error={!!errors.mainGroupId}>
+          <InputLabel>Ana Grup</InputLabel>
+          <Select
+            value={formData.mainGroupId || ''}
+            label="Ana Grup"
+            onChange={(e) => handleInputChange('mainGroupId', e.target.value || undefined)}
+            disabled={isLoading || !formData.branchId || mainGroupsLoading}
+          >
+            <MenuItem value="">
+              <em>Ana Grup Seçiniz</em>
+            </MenuItem>
+            {mainGroupsLoading ? (
+              <MenuItem disabled>
+                <CircularProgress size={20} /> Yükleniyor...
               </MenuItem>
-              {filteredCategories.map((category) => (
+            ) : mainGroupsError ? (
+              <MenuItem disabled>
+                Hata: Ana gruplar yüklenemedi
+              </MenuItem>
+            ) : (
+              mainGroups.map((mainGroup) => (
+                <MenuItem key={mainGroup.id} value={mainGroup.id}>
+                  {mainGroup.name}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+          {errors.mainGroupId && (
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+              {errors.mainGroupId}
+            </Typography>
+          )}
+        </FormControl>
+
+        <FormControl fullWidth>
+          <InputLabel>Alt Grup</InputLabel>
+          <Select
+            value={formData.subGroupId || ''}
+            label="Alt Grup"
+            onChange={(e) => handleInputChange('subGroupId', e.target.value || undefined)}
+            disabled={isLoading || !formData.mainGroupId || subGroupsLoading}
+          >
+            <MenuItem value="">
+              <em>Alt Grup Seçiniz</em>
+            </MenuItem>
+            {subGroupsLoading ? (
+              <MenuItem disabled>
+                <CircularProgress size={20} /> Yükleniyor...
+              </MenuItem>
+            ) : subGroupsError ? (
+              <MenuItem disabled>
+                Hata: Alt gruplar yüklenemedi
+              </MenuItem>
+            ) : (
+              subGroups.map((subGroup) => (
+                <MenuItem key={subGroup.id} value={subGroup.id}>
+                  {subGroup.name}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth>
+          <InputLabel>Kategori</InputLabel>
+          <Select
+            value={formData.categoryId || ''}
+            label="Kategori"
+            onChange={(e) => handleInputChange('categoryId', e.target.value || undefined)}
+            disabled={isLoading || !formData.branchId || categoriesLoading}
+          >
+            <MenuItem value="">
+              <em>Kategori Seçiniz</em>
+            </MenuItem>
+            {categoriesLoading ? (
+              <MenuItem disabled>
+                <CircularProgress size={20} /> Yükleniyor...
+              </MenuItem>
+            ) : categoriesError ? (
+              <MenuItem disabled>
+                Hata: Kategoriler yüklenemedi
+              </MenuItem>
+            ) : (
+              filteredCategories.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
                   {category.name}
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
+              ))
+            )}
+          </Select>
+        </FormControl>
 
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-          <Button
-            variant="outlined"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
-            İptal
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={isLoading}
-            startIcon={<Iconify icon="mingcute:add-line" />}
-          >
-            {isLoading ? 'Kaydediliyor...' : (isEditMode ? 'Güncelle' : 'Kaydet')}
-          </Button>
-        </Box>
+        <Box /> {/* Empty box for grid alignment */}
       </Box>
-    </Card>
+
+      {/* Submit Button */}
+      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={isLoading}
+          startIcon={isLoading ? <CircularProgress size={20} /> : <Iconify icon="mingcute:add-line" />}
+        >
+          {isLoading ? 'Kaydediliyor...' : (editMode ? 'Güncelle' : 'Kaydet')}
+        </Button>
+      </Box>
+    </Box>
   );
 } 

@@ -1,58 +1,87 @@
 import { useState, useCallback } from 'react';
-
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import TextField from '@mui/material/TextField';
+import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 
+import { useAuth } from 'src/contexts/auth-context';
 import { useRouter } from 'src/routes/hooks';
 
 import { Iconify } from 'src/components/iconify';
+import { Divider } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
 export function SignInView() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSignIn = useCallback(() => {
-    router.push('/');
-  }, [router]);
+  const handleSignIn = useCallback(async () => {
+    if (!username.trim() || !password.trim()) {
+      setError('Kullanıcı adı ve şifre gereklidir');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      await login({ username, password });
+      router.push('/stock-cards'); // Stok Kartları sayfasına yönlendir
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Login başarısız');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [username, password, login, router]);
 
   const renderForm = (
     <Box
+      component="form"
+      onSubmit={(e) => { e.preventDefault(); handleSignIn(); }}
       sx={{
         display: 'flex',
         alignItems: 'flex-end',
         flexDirection: 'column',
       }}
     >
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+          {error}
+        </Alert>
+      )}
+
       <TextField
         fullWidth
-        name="email"
-        label="Email address"
-        defaultValue="hello@gmail.com"
+        name="username"
+        label="Kullanıcı Adı"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
         sx={{ mb: 3 }}
+        disabled={isLoading}
         slotProps={{
           inputLabel: { shrink: true },
         }}
       />
 
-      <Link variant="body2" color="inherit" sx={{ mb: 1.5 }}>
-        Forgot password?
-      </Link>
-
       <TextField
         fullWidth
         name="password"
-        label="Password"
-        defaultValue="@demo1234"
+        label="Şifre"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
         type={showPassword ? 'text' : 'password'}
+        disabled={isLoading}
         slotProps={{
           inputLabel: { shrink: true },
           input: {
@@ -74,9 +103,10 @@ export function SignInView() {
         type="submit"
         color="inherit"
         variant="contained"
-        onClick={handleSignIn}
+        disabled={isLoading}
+        startIcon={isLoading ? <CircularProgress size={20} /> : null}
       >
-        Sign in
+        {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
       </Button>
     </Box>
   );
@@ -99,10 +129,14 @@ export function SignInView() {
             color: 'text.secondary',
           }}
         >
-          Don’t have an account?
-          <Link variant="subtitle2" sx={{ ml: 0.5 }}>
+          Don't have an account?
+          <Typography
+            component="span"
+            variant="subtitle2"
+            sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
+          >
             Get started
-          </Link>
+          </Typography>
         </Typography>
       </Box>
       {renderForm}

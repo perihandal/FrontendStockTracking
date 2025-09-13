@@ -7,27 +7,11 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { Iconify } from 'src/components/iconify';
-
-type StockTransaction = {
-  id: number;
-  transactionType: 'Giriş' | 'Çıkış' | 'Transfer';
-  quantity: number;
-  transactionDate: string;
-  documentNumber: string;
-  description: string;
-  stockCard: {
-    id: number;
-    name: string;
-    code: string;
-  };
-  warehouse: {
-    id: number;
-    name: string;
-  };
-};
+import type { StockTransactionDto } from 'src/services/api/stock-transaction-service';
+import { mapEnumToTransactionType } from 'src/utils/stock-card-utils';
 
 type StockTransactionsTableRowProps = {
-  transaction: StockTransaction;
+  transaction: StockTransactionDto;
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -41,9 +25,9 @@ export function StockTransactionsTableRow({
 }: StockTransactionsTableRowProps) {
   const getTransactionTypeColor = (type: string) => {
     switch (type) {
-      case 'Giriş':
+      case 'Giris':
         return 'success';
-      case 'Çıkış':
+      case 'Cikis':
         return 'error';
       case 'Transfer':
         return 'warning';
@@ -57,27 +41,26 @@ export function StockTransactionsTableRow({
       <TableCell>
         {new Date(transaction.transactionDate).toLocaleDateString('tr-TR')}
       </TableCell>
-      <TableCell>{transaction.documentNumber}</TableCell>
+      <TableCell>{transaction.documentNumber || '-'}</TableCell>
       <TableCell>
         <Chip
-          label={transaction.transactionType}
-          color={getTransactionTypeColor(transaction.transactionType)}
+          label={mapEnumToTransactionType(transaction.type)}
+          color={getTransactionTypeColor(mapEnumToTransactionType(transaction.type))}
           size="small"
         />
       </TableCell>
       <TableCell>
         <Box>
           <Typography variant="body2" fontWeight="medium">
-            {transaction.stockCard.name}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {transaction.stockCard.code}
+            {transaction.stockCardName}
           </Typography>
         </Box>
       </TableCell>
       <TableCell>{transaction.quantity}</TableCell>
-      <TableCell>{transaction.warehouse.name}</TableCell>
-      <TableCell>{transaction.description}</TableCell>
+      <TableCell>{transaction.warehouseName || '-'}</TableCell>
+      <TableCell>{transaction.fromWarehouseName || '-'}</TableCell>
+      <TableCell>{transaction.toWarehouseName || '-'}</TableCell>
+      <TableCell>{transaction.description || '-'}</TableCell>
       <TableCell>
         <Stack direction="row" spacing={1}>
           <IconButton size="small" color="primary" onClick={onView} title="Görüntüle">

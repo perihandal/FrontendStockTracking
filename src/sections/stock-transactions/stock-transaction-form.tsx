@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -13,14 +14,18 @@ import Typography from '@mui/material/Typography';
 import FormControl from '@mui/material/FormControl';
 
 import { Iconify } from 'src/components/iconify';
+import { StockService } from 'src/services/api/stock-service';
+import { WarehouseService } from 'src/services/api/warehouse-service';
 
 type StockTransactionFormData = {
   transactionType: 'Giriş' | 'Çıkış' | 'Transfer';
   quantity: number;
   documentNumber: string;
   description: string;
-  stockCardId: number;
-  warehouseId: number;
+  stockCardId: number | undefined;
+  warehouseId: number | undefined;
+  fromWarehouseId?: number;
+  toWarehouseId?: number;
   transactionDate: string;
 };
 
@@ -42,18 +47,7 @@ type StockTransactionFormProps = {
   initialData?: StockTransactionFormData;
 };
 
-// Mock veriler
-const mockStockCards: StockCard[] = [
-  { id: 1, name: 'Çelik Levha', code: 'STK001' },
-  { id: 2, name: 'Alüminyum Profil', code: 'STK002' },
-  { id: 3, name: 'Plastik Hammadde', code: 'STK003' },
-];
-
-const mockWarehouses: Warehouse[] = [
-  { id: 1, name: 'Ana Depo' },
-  { id: 2, name: 'Yan Depo' },
-  { id: 3, name: 'Üretim Deposu' },
-];
+// API'den veri çekme
 
 export function StockTransactionForm({ 
   onSubmit, 
@@ -61,13 +55,41 @@ export function StockTransactionForm({
   isEditMode = false, 
   initialData 
 }: StockTransactionFormProps) {
+  // API'den stok kartları ve depoları çek
+  const { data: stockCardsResponse, isLoading: stockCardsLoading } = useQuery({
+    queryKey: ['stockCards'],
+    queryFn: async () => {
+      const result = await StockService.getStockCards();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to fetch stock cards');
+      }
+      return result.data;
+    },
+  });
+
+  const { data: warehousesResponse, isLoading: warehousesLoading } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: async () => {
+      const result = await WarehouseService.getWarehouses();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to fetch warehouses');
+      }
+      return result.data;
+    },
+  });
+
+  const stockCards = Array.isArray(stockCardsResponse) ? stockCardsResponse : [];
+  const warehouses = Array.isArray(warehousesResponse) ? warehousesResponse : [];
+
   const [formData, setFormData] = useState<StockTransactionFormData>({
     transactionType: 'Giriş',
-    quantity: 0,
+    quantity: 1,
     documentNumber: '',
     description: '',
-    stockCardId: 0,
-    warehouseId: 0,
+    stockCardId: undefined,
+    warehouseId: undefined,
+    fromWarehouseId: undefined,
+    toWarehouseId: undefined,
     transactionDate: new Date().toISOString().split('T')[0],
   });
 
@@ -80,7 +102,17 @@ export function StockTransactionForm({
   }, [initialData]);
 
   const handleInputChange = (field: keyof StockTransactionFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newFormData = { ...prev, [field]: value };
+      
+      // Transaction type değiştiğinde warehouseId'yi temizle
+      if (field === 'transactionType' && value === 'Transfer') {
+        newFormData.warehouseId = undefined;
+      }
+      
+      return newFormData;
+    });
+    
     // Hata mesajını temizle
     if (errors[field]) {
       setErrors(prev => {
@@ -98,16 +130,30 @@ export function StockTransactionForm({
       newErrors.documentNumber = 'Belge numarası gereklidir';
     }
 
-    if (formData.quantity <= 0) {
-      newErrors.quantity = 'Miktar 0\'dan büyük olmalıdır';
+    if (formData.quantity < 1) {
+      newErrors.quantity = 'Miktar 1\'den küçük olamaz';
     }
 
     if (!formData.stockCardId) {
       newErrors.stockCardId = 'Stok kartı seçilmelidir';
     }
 
-    if (!formData.warehouseId) {
+    // Transfer işleminde warehouseId gerekli değil
+    if (formData.transactionType !== 'Transfer' && !formData.warehouseId) {
       newErrors.warehouseId = 'Depo seçilmelidir';
+    }
+
+    // Transfer işlemleri için kaynak ve hedef depo kontrolü
+    if (formData.transactionType === 'Transfer') {
+      if (!formData.fromWarehouseId) {
+        newErrors.fromWarehouseId = 'Kaynak depo seçilmelidir';
+      }
+      if (!formData.toWarehouseId) {
+        newErrors.toWarehouseId = 'Hedef depo seçilmelidir';
+      }
+      if (formData.fromWarehouseId === formData.toWarehouseId) {
+        newErrors.toWarehouseId = 'Kaynak ve hedef depo aynı olamaz';
+      }
     }
 
     if (!formData.transactionDate) {
@@ -124,6 +170,17 @@ export function StockTransactionForm({
       onSubmit(formData);
     }
   };
+
+  // Loading state
+  if (stockCardsLoading || warehousesLoading) {
+    return (
+      <Card sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+          <Typography>Veriler yükleniyor...</Typography>
+        </Box>
+      </Card>
+    );
+  }
 
   return (
     <Card sx={{ p: 3 }}>
@@ -179,7 +236,7 @@ export function StockTransactionForm({
               type="number"
               label="Miktar"
               value={formData.quantity}
-              onChange={(e) => handleInputChange('quantity', Number(e.target.value))}
+              onChange={(e) => handleInputChange('quantity', e.target.value ? Number(e.target.value) : 0)}
               error={!!errors.quantity}
               helperText={errors.quantity}
             />
@@ -190,11 +247,12 @@ export function StockTransactionForm({
             <FormControl fullWidth error={!!errors.stockCardId}>
               <InputLabel>Stok Kartı</InputLabel>
               <Select
-                value={formData.stockCardId}
+                value={formData.stockCardId ?? ''}
                 label="Stok Kartı"
-                onChange={(e) => handleInputChange('stockCardId', Number(e.target.value))}
+                onChange={(e) => handleInputChange('stockCardId', e.target.value ? Number(e.target.value) : undefined)}
               >
-                {mockStockCards.map((card) => (
+                <MenuItem value=""><em>Stok kartı seçin</em></MenuItem>
+                {stockCards.map((card) => (
                   <MenuItem key={card.id} value={card.id}>
                     {card.name} ({card.code})
                   </MenuItem>
@@ -207,26 +265,81 @@ export function StockTransactionForm({
               )}
             </FormControl>
 
-            <FormControl fullWidth error={!!errors.warehouseId}>
-              <InputLabel>Depo</InputLabel>
-              <Select
-                value={formData.warehouseId}
-                label="Depo"
-                onChange={(e) => handleInputChange('warehouseId', Number(e.target.value))}
-              >
-                {mockWarehouses.map((warehouse) => (
-                  <MenuItem key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.warehouseId && (
-                <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                  {errors.warehouseId}
-                </Typography>
-              )}
-            </FormControl>
+            {/* Transfer işleminde warehouseId alanını gizle */}
+            {formData.transactionType !== 'Transfer' && (
+              <FormControl fullWidth error={!!errors.warehouseId}>
+                <InputLabel>Depo</InputLabel>
+                <Select
+                  value={formData.warehouseId ?? ''}
+                  label="Depo"
+                  onChange={(e) => handleInputChange('warehouseId', e.target.value ? Number(e.target.value) : undefined)}
+                >
+                  <MenuItem value=""><em>Depo seçin</em></MenuItem>
+                  {warehouses.map((warehouse) => (
+                    <MenuItem key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.warehouseId && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                    {errors.warehouseId}
+                  </Typography>
+                )}
+              </FormControl>
+            )}
           </Stack>
+
+          {/* Transfer İşlemleri için Kaynak ve Hedef Depo */}
+          {formData.transactionType === 'Transfer' && (
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+              <FormControl fullWidth error={!!errors.fromWarehouseId}>
+                <InputLabel>Kaynak Depo</InputLabel>
+                <Select
+                  value={formData.fromWarehouseId ?? ''}
+                  label="Kaynak Depo"
+                  onChange={(e) => handleInputChange('fromWarehouseId', e.target.value ? Number(e.target.value) : undefined)}
+                >
+                  <MenuItem value="">
+                    <em>Kaynak depo seçin</em>
+                  </MenuItem>
+                  {warehouses.map((warehouse) => (
+                    <MenuItem key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.fromWarehouseId && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                    {errors.fromWarehouseId}
+                  </Typography>
+                )}
+              </FormControl>
+
+              <FormControl fullWidth error={!!errors.toWarehouseId}>
+                <InputLabel>Hedef Depo</InputLabel>
+                <Select
+                  value={formData.toWarehouseId ?? ''}
+                  label="Hedef Depo"
+                  onChange={(e) => handleInputChange('toWarehouseId', e.target.value ? Number(e.target.value) : undefined)}
+                >
+                  <MenuItem value="">
+                    <em>Hedef depo seçin</em>
+                  </MenuItem>
+                  {warehouses.map((warehouse) => (
+                    <MenuItem key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.toWarehouseId && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                    {errors.toWarehouseId}
+                  </Typography>
+                )}
+              </FormControl>
+            </Stack>
+          )}
 
           {/* Açıklama */}
           <TextField

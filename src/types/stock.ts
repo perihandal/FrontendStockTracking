@@ -54,8 +54,7 @@ export interface Branch {
   isActive: boolean;
   companyId: number;
   company: Company;
-  createUserId: number;
-  createUser: User;
+
 }
 
 // Depo

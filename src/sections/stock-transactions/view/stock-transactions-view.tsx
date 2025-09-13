@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react';
 
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -22,83 +23,32 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
 import { Iconify } from 'src/components/iconify';
+import StockTransactionService, { type StockTransactionDto, type CreateStockTransactionRequest, type UpdateStockTransactionRequest } from 'src/services/api/stock-transaction-service';
+import { useAuth } from 'src/contexts/auth-context';
+import { mapEnumToTransactionType } from 'src/utils/stock-card-utils';
 
 import { StockTransactionForm } from '../stock-transaction-form';
 import { StockTransactionsTableRow } from '../stock-transactions-table-row';
 import { StockTransactionsTableToolbar } from '../stock-transactions-table-toolbar';
 
-type StockTransaction = {
-  id: number;
-  transactionType: 'Giriş' | 'Çıkış' | 'Transfer';
-  quantity: number;
-  transactionDate: string;
-  documentNumber: string;
-  description: string;
-  stockCard: {
-    id: number;
-    name: string;
-    code: string;
-  };
-  warehouse: {
-    id: number;
-    name: string;
-  };
-};
-
 type StockTransactionFormData = {
-  transactionType: 'Giriş' | 'Çıkış' | 'Transfer';
+  transactionType: 'Giris' | 'Cikis' | 'Transfer';
   quantity: number;
   documentNumber: string;
   description: string;
-  stockCardId: number;
-  warehouseId: number;
+  stockCardId: number | undefined;
+  warehouseId: number | undefined;
   transactionDate: string;
 };
-
-// Mock veri - gerçek API'den gelecek
-const initialStockTransactions: StockTransaction[] = [
-  {
-    id: 1,
-    transactionType: 'Giriş',
-    quantity: 100,
-    transactionDate: new Date().toISOString(),
-    documentNumber: 'FTR001',
-    description: 'Çelik levha girişi',
-    stockCard: {
-      id: 1,
-      name: 'Çelik Levha',
-      code: 'STK001',
-    },
-    warehouse: {
-      id: 1,
-      name: 'Ana Depo',
-    },
-  },
-  {
-    id: 2,
-    transactionType: 'Çıkış',
-    quantity: 25,
-    transactionDate: new Date().toISOString(),
-    documentNumber: 'FTR002',
-    description: 'Üretim için çıkış',
-    stockCard: {
-      id: 1,
-      name: 'Çelik Levha',
-      code: 'STK001',
-    },
-    warehouse: {
-      id: 1,
-      name: 'Ana Depo',
-    },
-  },
-];
 
 export function StockTransactionsView() {
-  const [stockTransactions, setStockTransactions] = useState<StockTransaction[]>(initialStockTransactions);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filterName, setFilterName] = useState('');
-  const [selectedTransaction, setSelectedTransaction] = useState<StockTransaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<StockTransactionDto | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -110,6 +60,109 @@ export function StockTransactionsView() {
     open: false,
     message: '',
     severity: 'info',
+  });
+
+  // Fetch stock transactions from backend
+  const { data: stockTransactionsResponse, isLoading, error } = useQuery({
+    queryKey: ['stockTransactions'],
+    queryFn: async () => {
+      const result = await StockTransactionService.getStockTransactions();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to fetch stock transactions');
+      }
+      return result.data;
+    },
+  });
+
+  const stockTransactions = Array.isArray(stockTransactionsResponse) ? stockTransactionsResponse : [];
+
+  // Create stock transaction mutation
+  const createStockTransactionMutation = useMutation({
+    mutationFn: (data: CreateStockTransactionRequest) => StockTransactionService.createStockTransaction(data),
+    onSuccess: (result) => {
+      console.log('✅ Create mutation success:', result);
+      console.log('🔄 Invalidating queries...');
+      queryClient.invalidateQueries({ queryKey: ['stockTransactions'] });
+      console.log('✅ Queries invalidated');
+      setSnackbar({
+        open: true,
+        message: 'Stok işlemi başarıyla eklendi!',
+        severity: 'success',
+      });
+      setFormModalOpen(false);
+      setSelectedTransaction(null);
+      setEditMode(false);
+    },
+    onError: (error: any) => {
+      console.error('❌ Create stock transaction error:', error);
+      setSnackbar({
+        open: true,
+        message: `Hata: ${error.response?.data?.message || 'Stok işlemi eklenemedi'}`,
+        severity: 'error',
+      });
+    },
+    onSettled: (data, error) => {
+      console.log('🔍 Create mutation settled - data:', data, 'error:', error);
+      if (!error) {
+        console.log('🔄 Invalidating queries from onSettled...');
+        queryClient.invalidateQueries({ queryKey: ['stockTransactions'] });
+        console.log('✅ Queries invalidated from onSettled');
+        setSnackbar({
+          open: true,
+          message: 'Stok işlemi başarıyla eklendi!',
+          severity: 'success',
+        });
+        setFormModalOpen(false);
+        setSelectedTransaction(null);
+        setEditMode(false);
+      }
+    },
+  });
+
+  // Update stock transaction mutation
+  const updateStockTransactionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateStockTransactionRequest }) => 
+      StockTransactionService.updateStockTransaction(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stockTransactions'] });
+      setSnackbar({
+        open: true,
+        message: 'Stok işlemi başarıyla güncellendi!',
+        severity: 'success',
+      });
+      setFormModalOpen(false);
+      setSelectedTransaction(null);
+      setEditMode(false);
+    },
+    onError: (error: any) => {
+      console.error('❌ Update stock transaction error:', error);
+      setSnackbar({
+        open: true,
+        message: `Hata: ${error.response?.data?.message || 'Stok işlemi güncellenemedi'}`,
+        severity: 'error',
+      });
+    },
+  });
+
+  // Delete stock transaction mutation
+  const deleteStockTransactionMutation = useMutation({
+    mutationFn: (id: number) => StockTransactionService.deleteStockTransaction(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stockTransactions'] });
+      setSnackbar({
+        open: true,
+        message: 'Stok işlemi başarıyla silindi!',
+        severity: 'success',
+      });
+    },
+    onError: (error: any) => {
+      console.error('❌ Delete stock transaction error:', error);
+      setSnackbar({
+        open: true,
+        message: `Hata: ${error.response?.data?.message || 'Stok işlemi silinemedi'}`,
+        severity: 'error',
+      });
+    },
   });
 
   const handleChangePage = (
@@ -129,25 +182,20 @@ export function StockTransactionsView() {
     setPage(0);
   };
 
-  const handleView = (transaction: StockTransaction) => {
+  const handleView = (transaction: StockTransactionDto) => {
     setSelectedTransaction(transaction);
     setDetailModalOpen(true);
   };
 
-  const handleEdit = (transaction: StockTransaction) => {
+  const handleEdit = (transaction: StockTransactionDto) => {
     setSelectedTransaction(transaction);
     setEditMode(true);
     setFormModalOpen(true);
   };
 
-  const handleDelete = (transaction: StockTransaction) => {
-    if (window.confirm(`${transaction.documentNumber} işlemini silmek istediğinizden emin misiniz?`)) {
-      setStockTransactions(prev => prev.filter(t => t.id !== transaction.id));
-      setSnackbar({
-        open: true,
-        message: `${transaction.documentNumber} işlemi başarıyla silindi!`,
-        severity: 'success',
-      });
+  const handleDelete = (transaction: StockTransactionDto) => {
+    if (window.confirm(`${transaction.documentNumber || 'Bu'} işlemini silmek istediğinizden emin misiniz?`)) {
+      deleteStockTransactionMutation.mutate(transaction.id);
     }
   };
 
@@ -158,65 +206,57 @@ export function StockTransactionsView() {
   };
 
   const handleSubmitForm = (formData: StockTransactionFormData) => {
-    if (editMode && selectedTransaction) {
-      // Düzenleme
-      const updatedTransaction: StockTransaction = {
-        ...selectedTransaction,
-        transactionType: formData.transactionType,
-        quantity: formData.quantity,
-        documentNumber: formData.documentNumber,
-        description: formData.description,
-        transactionDate: new Date(formData.transactionDate).toISOString(),
-        stockCard: {
-          id: formData.stockCardId,
-          name: 'Çelik Levha', // Mock veri
-          code: 'STK001',
-        },
-        warehouse: {
-          id: formData.warehouseId,
-          name: 'Ana Depo', // Mock veri
-        },
-      };
-
-      setStockTransactions(prev => 
-        prev.map(t => t.id === selectedTransaction.id ? updatedTransaction : t)
-      );
-      setSnackbar({
-        open: true,
-        message: `${formData.documentNumber} işlemi başarıyla güncellendi!`,
-        severity: 'success',
-      });
-    } else {
-      // Yeni işlem
-      const newTransaction: StockTransaction = {
-        id: Math.max(...stockTransactions.map(t => t.id)) + 1,
-        transactionType: formData.transactionType,
-        quantity: formData.quantity,
-        documentNumber: formData.documentNumber,
-        description: formData.description,
-        transactionDate: new Date(formData.transactionDate).toISOString(),
-        stockCard: {
-          id: formData.stockCardId,
-          name: 'Çelik Levha', // Mock veri
-          code: 'STK001',
-        },
-        warehouse: {
-          id: formData.warehouseId,
-          name: 'Ana Depo', // Mock veri
-        },
-      };
-
-      setStockTransactions(prev => [newTransaction, ...prev]);
-      setSnackbar({
-        open: true,
-        message: `${formData.documentNumber} işlemi başarıyla eklendi!`,
-        severity: 'success',
-      });
+    if (!user) {
+      console.warn('User not found, cannot submit form');
+      return;
     }
 
-    setFormModalOpen(false);
-    setSelectedTransaction(null);
-    setEditMode(false);
+    if (!formData.stockCardId) {
+      console.warn('Stock card must be selected');
+      return;
+    }
+
+    // Transfer işleminde warehouseId gerekli değil, sadece fromWarehouseId ve toWarehouseId gerekli
+    if (formData.transactionType !== 'Transfer' && !formData.warehouseId) {
+      console.warn('Warehouse must be selected for non-transfer transactions');
+      return;
+    }
+
+    if (editMode && selectedTransaction) {
+      // Update existing stock transaction
+      const updateData: UpdateStockTransactionRequest = {
+        type: formData.transactionType,
+        quantity: formData.quantity,
+        transactionDate: new Date(formData.transactionDate).toISOString(),
+        documentNumber: formData.documentNumber,
+        description: formData.description,
+        stockCardId: formData.stockCardId,
+        // Transfer işleminde warehouseId kullanma, sadece fromWarehouseId ve toWarehouseId kullan
+        warehouseId: formData.transactionType === 'Transfer' ? undefined : formData.warehouseId,
+        fromWarehouseId: formData.fromWarehouseId,
+        toWarehouseId: formData.toWarehouseId,
+        userId: Number(user.id),
+      };
+      
+      updateStockTransactionMutation.mutate({ id: selectedTransaction.id, data: updateData });
+    } else {
+      // Create new stock transaction
+      const createData: CreateStockTransactionRequest = {
+        type: formData.transactionType,
+        quantity: formData.quantity,
+        transactionDate: new Date(formData.transactionDate).toISOString(),
+        documentNumber: formData.documentNumber,
+        description: formData.description,
+        stockCardId: formData.stockCardId,
+        // Transfer işleminde warehouseId kullanma, sadece fromWarehouseId ve toWarehouseId kullan
+        warehouseId: formData.transactionType === 'Transfer' ? undefined : formData.warehouseId,
+        fromWarehouseId: formData.fromWarehouseId,
+        toWarehouseId: formData.toWarehouseId,
+        userId: Number(user.id),
+      };
+      
+      createStockTransactionMutation.mutate(createData);
+    }
   };
 
   const handleCloseForm = () => {
@@ -238,10 +278,29 @@ export function StockTransactionsView() {
   };
 
   const filteredTransactions = stockTransactions.filter((transaction) =>
-    transaction.documentNumber.toLowerCase().includes(filterName.toLowerCase()) ||
-    transaction.stockCard.name.toLowerCase().includes(filterName.toLowerCase()) ||
-    transaction.stockCard.code.toLowerCase().includes(filterName.toLowerCase())
+    (transaction.documentNumber?.toLowerCase().includes(filterName.toLowerCase()) || false) ||
+    transaction.stockCardName.toLowerCase().includes(filterName.toLowerCase())
   );
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography>Stok işlemleri yükleniyor...</Typography>
+      </Box>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Stok işlemleri yüklenirken hata oluştu: {error.message}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -283,6 +342,8 @@ export function StockTransactionsView() {
                 <TableCell>Stok Kartı</TableCell>
                 <TableCell>Miktar</TableCell>
                 <TableCell>Depo</TableCell>
+                <TableCell>Kaynak Depo</TableCell>
+                <TableCell>Hedef Depo</TableCell>
                 <TableCell>Açıklama</TableCell>
                 <TableCell>İşlemler</TableCell>
               </TableRow>
@@ -328,12 +389,14 @@ export function StockTransactionsView() {
             onCancel={handleCloseForm}
             isEditMode={editMode}
             initialData={selectedTransaction ? {
-              transactionType: selectedTransaction.transactionType,
+              transactionType: mapEnumToTransactionType(selectedTransaction.type) as any,
               quantity: selectedTransaction.quantity,
-              documentNumber: selectedTransaction.documentNumber,
-              description: selectedTransaction.description,
-              stockCardId: selectedTransaction.stockCard.id,
-              warehouseId: selectedTransaction.warehouse.id,
+              documentNumber: selectedTransaction.documentNumber || '',
+              description: selectedTransaction.description || '',
+              stockCardId: selectedTransaction.stockCardId,
+              warehouseId: selectedTransaction.warehouseId || undefined,
+              fromWarehouseId: selectedTransaction.fromWarehouseId || undefined,
+              toWarehouseId: selectedTransaction.toWarehouseId || undefined,
               transactionDate: new Date(selectedTransaction.transactionDate).toISOString().split('T')[0],
             } : undefined}
           />
@@ -358,13 +421,13 @@ export function StockTransactionsView() {
                 </Box>
                 <Box sx={{ flex: '1 1 45%' }}>
                   <Typography variant="subtitle2" color="text.secondary">İşlem Tipi</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedTransaction.transactionType}</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{mapEnumToTransactionType(selectedTransaction.type)}</Typography>
                 </Box>
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ flex: '1 1 45%' }}>
                   <Typography variant="subtitle2" color="text.secondary">Stok Kartı</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedTransaction.stockCard.name} ({selectedTransaction.stockCard.code})</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedTransaction.stockCardName}</Typography>
                 </Box>
                 <Box sx={{ flex: '1 1 45%' }}>
                   <Typography variant="subtitle2" color="text.secondary">Miktar</Typography>
@@ -374,11 +437,21 @@ export function StockTransactionsView() {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ flex: '1 1 45%' }}>
                   <Typography variant="subtitle2" color="text.secondary">Depo</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedTransaction.warehouse.name}</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedTransaction.warehouseName || '-'}</Typography>
                 </Box>
                 <Box sx={{ flex: '1 1 45%' }}>
                   <Typography variant="subtitle2" color="text.secondary">İşlem Tarihi</Typography>
                   <Typography variant="body1" sx={{ mb: 2 }}>{new Date(selectedTransaction.transactionDate).toLocaleDateString('tr-TR')}</Typography>
+                </Box>
+              </Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ flex: '1 1 45%' }}>
+                  <Typography variant="subtitle2" color="text.secondary">Kaynak Depo</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedTransaction.fromWarehouseName || '-'}</Typography>
+                </Box>
+                <Box sx={{ flex: '1 1 45%' }}>
+                  <Typography variant="subtitle2" color="text.secondary">Hedef Depo</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedTransaction.toWarehouseName || '-'}</Typography>
                 </Box>
               </Box>
               <Box>

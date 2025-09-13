@@ -1,4 +1,4 @@
-import type { StockCard } from 'src/types/stock';
+import type { StockCardDto } from 'src/services/api';
 
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
@@ -7,12 +7,13 @@ import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 
 import { Iconify } from 'src/components/iconify';
+import { mapEnumToStockCardType } from 'src/utils/stock-card-utils';
 
 type StockCardsTableRowProps = {
-  stockCard: StockCard;
-  onView: (stockCard: StockCard) => void;
-  onEdit: (stockCard: StockCard) => void;
-  onDelete: (stockCard: StockCard) => void;
+  stockCard: StockCardDto;
+  onView: (stockCard: StockCardDto) => void;
+  onEdit?: (stockCard: StockCardDto) => void;
+  onDelete?: (stockCard: StockCardDto) => void;
 };
 
 export function StockCardsTableRow({ 
@@ -25,16 +26,14 @@ export function StockCardsTableRow({
     switch (type) {
       case 'Hammadde':
         return 'primary';
-      case 'YarıMamul':
+      case 'AraUrun':
         return 'warning';
-      case 'Mamul':
+      case 'NihaiUrun':
         return 'success';
       default:
         return 'default';
     }
   };
-
-  const getStatusColor = (isActive: boolean) => (isActive ? 'success' : 'error');
 
   return (
     <TableRow hover>
@@ -42,26 +41,19 @@ export function StockCardsTableRow({
       <TableCell>{stockCard.name}</TableCell>
       <TableCell>
         <Chip
-          label={stockCard.type}
-          color={getTypeColor(stockCard.type)}
+          label={mapEnumToStockCardType(stockCard.type as any)}
+          color={getTypeColor(mapEnumToStockCardType(stockCard.type as any))}
           size="small"
         />
       </TableCell>
       <TableCell>{stockCard.unit}</TableCell>
       <TableCell>%{stockCard.tax}</TableCell>
-      <TableCell>{stockCard.company.name}</TableCell>
-      <TableCell>{stockCard.branch.name}</TableCell>
-      <TableCell>{stockCard.mainGroup.name}</TableCell>
-      <TableCell>{stockCard.subGroup?.name || '-'}</TableCell>
-      <TableCell>{stockCard.category?.name || '-'}</TableCell>
-      <TableCell>
-        <Chip
-          label={stockCard.isActive ? 'Aktif' : 'Pasif'}
-          color={getStatusColor(stockCard.isActive)}
-          size="small"
-        />
-      </TableCell>
-      <TableCell>{stockCard.createUser.fullName}</TableCell>
+      <TableCell>{stockCard.companyName}</TableCell>
+      <TableCell>{stockCard.branchName}</TableCell>
+      <TableCell>{stockCard.mainGroupName}</TableCell>
+      <TableCell>{stockCard.subGroupName || '-'}</TableCell>
+      <TableCell>{stockCard.categoryName || '-'}</TableCell>
+      <TableCell>{new Date(stockCard.createdDate).toLocaleDateString('tr-TR')}</TableCell>
       <TableCell>
         <Stack direction="row" spacing={1}>
           <IconButton 
@@ -72,22 +64,26 @@ export function StockCardsTableRow({
           >
             <Iconify icon="solar:eye-bold" />
           </IconButton>
-          <IconButton 
-            size="small" 
-            color="info"
-            onClick={() => onEdit(stockCard)}
-            title="Düzenle"
-          >
-            <Iconify icon="solar:pen-bold" />
-          </IconButton>
-          <IconButton 
-            size="small" 
-            color="error"
-            onClick={() => onDelete(stockCard)}
-            title="Sil"
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-          </IconButton>
+          {onEdit && (
+            <IconButton 
+              size="small" 
+              color="info"
+              onClick={() => onEdit(stockCard)}
+              title="Düzenle"
+            >
+              <Iconify icon="solar:pen-bold" />
+            </IconButton>
+          )}
+          {onDelete && (
+            <IconButton 
+              size="small" 
+              color="error"
+              onClick={() => onDelete(stockCard)}
+              title="Sil"
+            >
+              <Iconify icon="solar:trash-bin-trash-bold" />
+            </IconButton>
+          )}
         </Stack>
       </TableCell>
     </TableRow>
