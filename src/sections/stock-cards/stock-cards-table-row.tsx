@@ -6,8 +6,9 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 
-import { Iconify } from 'src/components/iconify';
 import { mapEnumToStockCardType } from 'src/utils/stock-card-utils';
+
+import { Iconify } from 'src/components/iconify';
 
 type StockCardsTableRowProps = {
   stockCard: StockCardDto;

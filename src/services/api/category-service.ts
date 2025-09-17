@@ -7,6 +7,7 @@ export interface CreateCategoryRequest {
   branchId: number;
   companyId: number;
   userId: number;
+  isActive: boolean;
 }
 
 export interface UpdateCategoryRequest {
@@ -14,6 +15,8 @@ export interface UpdateCategoryRequest {
   name: string;
   branchId: number;
   companyId: number;
+  userId: number;
+  isActive: boolean;
 }
 
 export interface CategoryDto {
@@ -76,10 +79,8 @@ export interface SubGroupDto {
 
 // API Response Types
 export interface ApiResponse<T> {
-  success: boolean;
   data?: T;
-  message?: string;
-  errors?: string[];
+  errorMessage?: string | null;
 }
 
 // Category Service
@@ -96,7 +97,18 @@ export class CategoryService {
   }
 
   static async updateCategory(id: number, data: UpdateCategoryRequest): Promise<ApiResponse<{ id: number }>> {
-    const response = await apiClient.put(`/api/Category/${id}`, data);
+    console.log('🔄 CategoryService.updateCategory - Endpoint:', `/api/Category?id=${id}`);
+    console.log('🔄 CategoryService.updateCategory - Data:', data);
+    
+    // Query parameter ile endpoint
+    const response = await apiClient.put(`/api/Category?id=${id}`, data);
+    return response.data;
+  }
+
+  static async deleteCategory(id: number): Promise<ApiResponse<{ id: number }>> {
+    console.log('🗑️ CategoryService.deleteCategory - Endpoint:', `/api/Category?id=${id}`);
+    
+    const response = await apiClient.delete(`/api/Category?id=${id}`);
     return response.data;
   }
 

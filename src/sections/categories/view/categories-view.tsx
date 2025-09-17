@@ -1,12 +1,11 @@
 import type { ChangeEvent } from 'react';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -15,51 +14,81 @@ import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
-import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { Iconify } from 'src/components/iconify';
-
-// Mock veri
-const mockCategories = [
-  {
-    id: 1,
-    code: 'CAT001',
-    name: 'Elektronik',
-    description: 'Elektronik ürünler',
-    isActive: true,
-    mainGroup: { id: 1, name: 'Teknoloji' },
-    subGroup: { id: 1, name: 'Elektronik' },
-  },
-  {
-    id: 2,
-    code: 'CAT002',
-    name: 'Gıda',
-    description: 'Gıda ürünleri',
-    isActive: true,
-    mainGroup: { id: 2, name: 'Tüketim' },
-    subGroup: { id: 2, name: 'Gıda' },
-  },
-];
+import { CategoryService } from 'src/services/api';
+import { CategoryForm } from '../category-form';
+import { CategoriesTableRow } from '../categories-table-row';
+import { CategoriesTableToolbar } from '../categories-table-toolbar';
+import { TableNoData } from '../table-no-data';
+import type { Category } from '../category.types';
 
 export function CategoriesView() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filterName, setFilterName] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: 'success' | 'error';
   }>({ open: false, message: '', severity: 'success' });
+
+  // Load categories on component mount
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    console.log('🔄 Loading categories...');
+    setLoading(true);
+    try {
+      const response = await CategoryService.getCategories();
+      console.log('📋 Categories response:', response);
+      
+      // Handle the actual response format from backend
+      if (response.data && Array.isArray(response.data)) {
+        console.log('✅ Categories loaded successfully:', response.data.length, 'items');
+        setCategories(response.data);
+      } else if (response.errorMessage) {
+        console.log('❌ Categories load error:', response.errorMessage);
+        setSnackbar({
+          open: true,
+          message: response.errorMessage,
+          severity: 'error',
+        });
+      } else {
+        console.log('❌ Categories load error: No data and no error message');
+        setSnackbar({
+          open: true,
+          message: 'Kategoriler yüklenirken hata oluştu',
+          severity: 'error',
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Error loading categories:', error);
+      setSnackbar({
+        open: true,
+        message: 'Kategoriler yüklenirken hata oluştu',
+        severity: 'error',
+      });
+    } finally {
+      setLoading(false);
+      console.log('✅ Categories loading completed');
+    }
+  };
 
   const handleChangePage = (
     event: React.MouseEvent<HTMLButtonElement> | null,
@@ -78,43 +107,102 @@ export function CategoriesView() {
     setPage(0);
   };
 
-  const handleView = (category: any) => {
+  const handleView = (category: Category) => {
     setSelectedCategory(category);
     setDetailModalOpen(true);
   };
 
-  const handleEdit = (category: any) => {
-    // Düzenleme işlemi için şimdilik sadece mesaj göster
-    setSnackbar({
-      open: true,
-      message: `${category.name} kategorisi düzenleme özelliği yakında eklenecek!`,
-      severity: 'success',
-    });
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category);
+    setFormModalOpen(true);
   };
 
-  const handleDelete = (category: any) => {
+  const handleDelete = async (category: Category) => {
     if (window.confirm(`${category.name} kategorisini silmek istediğinizden emin misiniz?`)) {
-      // Mock veriden sil
-      const index = mockCategories.findIndex(c => c.id === category.id);
-      if (index > -1) {
-        mockCategories.splice(index, 1);
+      try {
+        console.log('🗑️ Deleting category:', category.id, category.name);
+        
+        const response = await CategoryService.deleteCategory(category.id);
+        console.log('📋 Delete response:', response);
+        console.log('📋 Delete response data:', response.data);
+        console.log('📋 Delete response errorMessage:', response.errorMessage);
+        
+        // Backend'inizin response formatını kontrol et - daha esnek kontrol
+        const isDeleteSuccess = !response.errorMessage || 
+                               response.errorMessage === null ||
+                               response.errorMessage === '' ||
+                               (response.data && !response.errorMessage) ||
+                               (response.data === null && !response.errorMessage);
+        
+        if (isDeleteSuccess) {
+          console.log('✅ Delete successful');
+          // Listeyi yenile
+          loadCategories();
+          setSnackbar({
+            open: true,
+            message: 'Kategori başarıyla silindi!',
+            severity: 'success',
+          });
+        } else {
+          console.log('❌ Delete failed:', response.errorMessage);
+          setSnackbar({
+            open: true,
+            message: response.errorMessage || 'Kategori silinirken hata oluştu',
+            severity: 'error',
+          });
+        }
+      } catch (error: any) {
+        console.error('❌ Error deleting category:', error);
+        console.error('❌ Error response:', error.response);
+        console.error('❌ Error data:', error.response?.data);
+        
+        const errorMessage = error.response?.data?.errorMessage || 
+                            error.response?.data?.message || 
+                            error.message || 
+                            'Kategori silinirken hata oluştu';
+        
         setSnackbar({
           open: true,
-          message: `${category.name} kategorisi başarıyla silindi!`,
-          severity: 'success',
+          message: errorMessage,
+          severity: 'error',
         });
       }
     }
+  };
+
+  const handleCreateClick = () => {
+    setEditingCategory(null);
+    setFormModalOpen(true);
+  };
+
+  const handleFormSuccess = () => {
+    console.log('🔄 Form success - reloading categories...');
+    console.log('🔄 Current editingCategory:', editingCategory);
+    console.log('🔄 Current categories count:', categories.length);
+    
+    loadCategories();
+    
+    setSnackbar({
+      open: true,
+      message: editingCategory ? 'Kategori başarıyla güncellendi!' : 'Kategori başarıyla oluşturuldu!',
+      severity: 'success',
+    });
+    
+    // Reset editing category state
+    setEditingCategory(null);
+    
+    console.log('✅ Form success handled');
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  const filteredCategories = mockCategories.filter((category) =>
+  const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(filterName.toLowerCase()) ||
     category.code.toLowerCase().includes(filterName.toLowerCase())
   );
+
 
   return (
     <Box>
@@ -122,30 +210,14 @@ export function CategoriesView() {
         <Typography variant="h4">
           Kategoriler
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-        >
-          Yeni Kategori
-        </Button>
       </Box>
 
       <Card>
-        <Box sx={{ p: 2.5 }}>
-          <TextField
-            fullWidth
-            value={filterName}
-            onChange={handleFilterName}
-            placeholder="Kategori ara..."
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
+        <CategoriesTableToolbar
+          filterName={filterName}
+          onFilterName={handleFilterName}
+          onCreateClick={handleCreateClick}
+        />
 
         <TableContainer>
           <Table>
@@ -153,57 +225,40 @@ export function CategoriesView() {
               <TableRow>
                 <TableCell>Kategori Kodu</TableCell>
                 <TableCell>Kategori Adı</TableCell>
-                <TableCell>Ana Grup</TableCell>
-                <TableCell>Alt Grup</TableCell>
-                <TableCell>Açıklama</TableCell>
+                <TableCell>Şirket</TableCell>
+                <TableCell>Şube</TableCell>
+                <TableCell>Oluşturan</TableCell>
+                <TableCell>Oluşturma Tarihi</TableCell>
                 <TableCell>Durum</TableCell>
                 <TableCell>İşlemler</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredCategories
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((category) => (
-                  <TableRow key={category.id} hover>
-                    <TableCell>{category.code}</TableCell>
-                    <TableCell>{category.name}</TableCell>
-                    <TableCell>{category.mainGroup.name}</TableCell>
-                    <TableCell>{category.subGroup.name}</TableCell>
-                    <TableCell>{category.description}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={category.isActive ? 'Aktif' : 'Pasif'}
-                        color={category.isActive ? 'success' : 'error'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1}>
-                        <IconButton 
-                          size="small" 
-                          color="primary"
-                          onClick={() => handleView(category)}
-                        >
-                          <Iconify icon="solar:eye-bold" />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          color="info"
-                          onClick={() => handleEdit(category)}
-                        >
-                          <Iconify icon="solar:pen-bold" />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          color="error"
-                          onClick={() => handleDelete(category)}
-                        >
-                          <Iconify icon="solar:trash-bin-trash-bold" />
-                        </IconButton>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))}
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} sx={{ textAlign: 'center', py: 4 }}>
+                    <CircularProgress />
+                  </TableCell>
+                </TableRow>
+              ) : filteredCategories.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <TableNoData query={filterName} />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredCategories
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((category) => (
+                    <CategoriesTableRow
+                      key={category.id}
+                      category={category}
+                      onView={handleView}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -245,17 +300,31 @@ export function CategoriesView() {
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ flex: '1 1 45%' }}>
-                  <Typography variant="subtitle2" color="text.secondary">Ana Grup</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCategory.mainGroup.name}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary">Şirket</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCategory.companyName}</Typography>
                 </Box>
                 <Box sx={{ flex: '1 1 45%' }}>
-                  <Typography variant="subtitle2" color="text.secondary">Alt Grup</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCategory.subGroup.name}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary">Şube</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCategory.branchName}</Typography>
                 </Box>
               </Box>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">Açıklama</Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>{selectedCategory.description}</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ flex: '1 1 45%' }}>
+                  <Typography variant="subtitle2" color="text.secondary">Oluşturan</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCategory.userName}</Typography>
+                </Box>
+                <Box sx={{ flex: '1 1 45%' }}>
+                  <Typography variant="subtitle2" color="text.secondary">Oluşturma Tarihi</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {new Date(selectedCategory.createDate).toLocaleDateString('tr-TR', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Typography>
+                </Box>
               </Box>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">Durum</Typography>
@@ -282,6 +351,15 @@ export function CategoriesView() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Form Modal */}
+      <CategoryForm
+        open={formModalOpen}
+        onClose={() => setFormModalOpen(false)}
+        onSuccess={handleFormSuccess}
+        category={editingCategory || undefined}
+        isEdit={!!editingCategory}
+      />
 
       {/* Snackbar */}
       <Snackbar

@@ -18,7 +18,10 @@ export const StockTransactionsPage = lazy(() => import('src/pages/stock-transact
 export const CompaniesPage = lazy(() => import('src/pages/companies'));
 export const BranchesPage = lazy(() => import('src/pages/branches'));
 export const WarehousesPage = lazy(() => import('src/pages/warehouses'));
+export const BarcodesPage = lazy(() => import('src/pages/barcodes'));
 export const CategoriesPage = lazy(() => import('src/pages/categories'));
+export const GroupsPage = lazy(() => import('src/pages/groups'));
+export const PricesPage = lazy(() => import('src/pages/prices'));
 export const UsersPage = lazy(() => import('src/pages/users'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
@@ -62,7 +65,10 @@ export const routesSection: RouteObject[] = [
       { path: 'companies', element: <CompaniesPage /> },
       { path: 'branches', element: <BranchesPage /> },
       { path: 'warehouses', element: <WarehousesPage /> },
+      { path: 'barcodes', element: <BarcodesPage /> },
       { path: 'categories', element: <CategoriesPage /> },
+        { path: 'groups', element: <GroupsPage /> },
+        { path: 'prices', element: <PricesPage /> },
       { path: 'users', element: <UsersPage /> },
       { path: 'user', element: <UserPage /> },
       { path: 'products', element: <ProductsPage /> },

@@ -18,7 +18,6 @@ type CompanyFormData = {
   taxNumber: string;
   address: string;
   phone: string;
-  email: string;
   isActive: boolean;
 };
 
@@ -38,9 +37,9 @@ export function CompanyForm({
   const [formData, setFormData] = useState<CompanyFormData>({
     code: '',
     name: '',
+    taxNumber: '',
     address: '',
     phone: '',
-    email: '',
     isActive: true,
   });
 
@@ -75,18 +74,16 @@ export function CompanyForm({
       newErrors.name = 'Şirket adı gereklidir';
     }
 
+    if (!formData.taxNumber.trim()) {
+      newErrors.taxNumber = 'Vergi numarası gereklidir';
+    }
+
     if (!formData.address.trim()) {
       newErrors.address = 'Adres gereklidir';
     }
 
     if (!formData.phone.trim()) {
       newErrors.phone = 'Telefon numarası gereklidir';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'E-posta adresi gereklidir';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Geçerli bir e-posta adresi giriniz';
     }
 
     setErrors(newErrors);
@@ -134,29 +131,27 @@ export function CompanyForm({
             />
           </Stack>
 
-          {/* Telefon ve E-posta */}
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <TextField
-              fullWidth
-              label="Telefon"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              error={!!errors.phone}
-              helperText={errors.phone}
-              placeholder="0212 123 45 67"
-            />
+          {/* Vergi Numarası */}
+          <TextField
+            fullWidth
+            label="Vergi Numarası"
+            value={formData.taxNumber}
+            onChange={(e) => handleInputChange('taxNumber', e.target.value)}
+            error={!!errors.taxNumber}
+            helperText={errors.taxNumber}
+            placeholder="1234567890"
+          />
 
-            <TextField
-              fullWidth
-              label="E-posta"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              error={!!errors.email}
-              helperText={errors.email}
-              placeholder="info@sirket.com"
-            />
-          </Stack>
+          {/* Telefon */}
+          <TextField
+            fullWidth
+            label="Telefon"
+            value={formData.phone}
+            onChange={(e) => handleInputChange('phone', e.target.value)}
+            error={!!errors.phone}
+            helperText={errors.phone}
+            placeholder="0212 123 45 67"
+          />
 
           {/* Adres */}
           <TextField

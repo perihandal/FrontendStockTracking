@@ -6,11 +6,13 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
 import Divider from '@mui/material/Divider';
+import Switch from '@mui/material/Switch';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
 import Typography from '@mui/material/Typography';
 import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -20,6 +22,7 @@ type BranchFormData = {
   address: string;
   companyId: number;
   phone: string;
+  isActive: boolean;
 };
 
 type Company = {
@@ -28,7 +31,7 @@ type Company = {
   code: string;
 };
 
-type StockTransactionFormProps = {
+type BranchFormProps = {
   onSubmit: (data: BranchFormData) => void;
   onCancel: () => void;
   isEditMode?: boolean;
@@ -46,13 +49,14 @@ export function BranchForm({
   onCancel, 
   isEditMode = false, 
   initialData 
-}: StockTransactionFormProps) {
+}: BranchFormProps) {
   const [formData, setFormData] = useState<BranchFormData>({
     code: '',
     name: '',
     address: '',
     companyId: 0,
     phone: '',
+    isActive: true,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -113,7 +117,7 @@ export function BranchForm({
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
         <Typography variant="h6">
           <Iconify icon="solar:cart-3-bold" sx={{ mr: 1 }} />
-          {isEditMode ? 'İşlem Düzenle' : 'Yeni İşlem'}
+          {isEditMode ? 'Şube Düzenle' : 'Yeni Şube'}
         </Typography>
       </Stack>
 
@@ -180,6 +184,25 @@ export function BranchForm({
                 {errors.companyId}
               </Typography>
             )}
+          </FormControl>
+
+          {/* Aktif/Pasif Durumu */}
+          <FormControl fullWidth>
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                Durum:
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isActive}
+                    onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={formData.isActive ? 'Aktif' : 'Pasif'}
+              />
+            </Stack>
           </FormControl>
 
           {/* Butonlar */}

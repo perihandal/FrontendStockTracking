@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react';
 
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -23,47 +24,33 @@ import TableContainer from '@mui/material/TableContainer';
 import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 
+import { useAuth } from 'src/contexts/auth-context';
+import { BranchService, type BranchDtoType, type CreateBranchRequestType, type UpdateBranchRequestType } from 'src/services/api';
+
 import { Iconify } from 'src/components/iconify';
 
 import { BranchForm } from '../branch-form';
 import { BranchesTableRow } from '../branchs-table-row';
 
 
-// Mock veri (gerçek uygulamada API'den gelir)
-const initialBranches = [
-  {
-    id: 1,
-    code: 'SB001',
-    name: 'Merkez Şube',
-    address: 'İstanbul, Türkiye',
-    phone: '0212 123 45 67',
-    isActive: true,
-    companyId: 1,
-    company: { id: 1, name: 'ABC Şirketi',taxNumber: '123456789',  // Eksik alanları ekledik
-      address: 'İstanbul, Türkiye',
-      phone: '0212 123 45 67',
-      isActive: true },
-  },
-  {
-    id: 2,
-    code: 'SB002',
-    name: 'Ankara Şubesi',
-    address: 'Ankara, Türkiye',
-    phone: '0312 987 65 43',
-    isActive: true,
-    companyId: 1,
-    company: { id: 1, name: 'ABC Şirketi' ,taxNumber: '123456789',  // Eksik alanları ekledik
-      address: 'İstanbul, Türkiye',
-      phone: '0212 123 45 67',
-      isActive: true},
-  },
-];
+// Branch form data type
+type BranchFormData = {
+  code: string;
+  name: string;
+  address: string;
+  phone: string;
+  companyId: number;
+  isActive: boolean;
+};
 
 export function BranchesView() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filterName, setFilterName] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState<any>(null);
+  const [selectedBranch, setSelectedBranch] = useState<BranchDtoType | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -72,6 +59,95 @@ export function BranchesView() {
     message: '',
     severity: 'success',
   });
+
+  // API Queries
+  const { data: branchesResult, isLoading, error } = useQuery({
+    queryKey: ['branches'],
+    queryFn: async () => {
+      console.log('🔍 BranchesView: Fetching branches from API');
+      const result = await BranchService.getBranches();
+      console.log('📊 BranchesView: API response:', result);
+      return result;
+    },
+  });
+
+  // Mutations
+  const createBranchMutation = useMutation({
+    mutationFn: (data: CreateBranchRequestType) => {
+      console.log('🔍 BranchesView: Creating branch with data:', data);
+      return BranchService.createBranch(data);
+    },
+    onSuccess: () => {
+      console.log('✅ BranchesView: Branch created successfully');
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      setSnackbar({
+        open: true,
+        message: 'Şube başarıyla eklendi!',
+        severity: 'success',
+      });
+    },
+    onError: (err: any) => {
+      console.error('❌ BranchesView: Failed to create branch:', err);
+      const errorMessage = err?.response?.data?.errorMessage?.join(', ') || 'Şube eklenirken bir hata oluştu';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    },
+  });
+
+  const updateBranchMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateBranchRequestType }) => {
+      console.log('🔍 BranchesView: Updating branch with id:', id, 'data:', data);
+      return BranchService.updateBranch(id, data);
+    },
+    onSuccess: () => {
+      console.log('✅ BranchesView: Branch updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      setSnackbar({
+        open: true,
+        message: 'Şube başarıyla güncellendi!',
+        severity: 'success',
+      });
+    },
+    onError: (err: any) => {
+      console.error('❌ BranchesView: Failed to update branch:', err);
+      const errorMessage = err?.response?.data?.errorMessage?.join(', ') || 'Şube güncellenirken bir hata oluştu';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    },
+  });
+
+  const deleteBranchMutation = useMutation({
+    mutationFn: (id: number) => {
+      console.log('🔍 BranchesView: Deleting branch with id:', id);
+      return BranchService.deleteBranch(id);
+    },
+    onSuccess: () => {
+      console.log('✅ BranchesView: Branch deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      setSnackbar({
+        open: true,
+        message: 'Şube başarıyla silindi!',
+        severity: 'success',
+      });
+    },
+    onError: (err: any) => {
+      console.error('❌ BranchesView: Failed to delete branch:', err);
+      const errorMessage = err?.response?.data?.errorMessage?.join(', ') || 'Şube silinirken bir hata oluştu';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    },
+  });
+
+  const branches = branchesResult?.data || [];
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
 
@@ -85,28 +161,20 @@ export function BranchesView() {
     setPage(0);
   };
 
-  const handleView = (branch: any) => {
+  const handleView = (branch: BranchDtoType) => {
     setSelectedBranch(branch);
     setDetailModalOpen(true);
   };
 
-  const handleEdit = (branch: any) => {
+  const handleEdit = (branch: BranchDtoType) => {
     setSelectedBranch(branch);
     setEditMode(true);
     setFormModalOpen(true);
   };
 
-  const handleDelete = (branch: any) => {
+  const handleDelete = (branch: BranchDtoType) => {
     if (window.confirm(`${branch.name} şubesini silmek istediğinizden emin misiniz?`)) {
-      const index = initialBranches.findIndex(b => b.id === branch.id);
-      if (index > -1) {
-        initialBranches.splice(index, 1);
-        setSnackbar({
-          open: true,
-          message: `${branch.name} şubesi başarıyla silindi!`,
-          severity: 'success',
-        });
-      }
+      deleteBranchMutation.mutate(branch.id);
     }
   };
 
@@ -116,36 +184,31 @@ export function BranchesView() {
     setFormModalOpen(true);
   };
 
-  const handleSubmitForm = (formData: any) => {
-    if (editMode && selectedBranch) {
+  const handleSubmitForm = (formData: BranchFormData) => {
+    if (editMode && selectedBranch && user?.id) {
       // Şube güncelleme işlemi
-      const updatedBranch = {
-        ...selectedBranch,
+      const updateData: UpdateBranchRequestType = {
         code: formData.code,
         name: formData.name,
-        companyId: formData.companyName,
         address: formData.address,
         phone: formData.phone,
         isActive: formData.isActive,
+        companyId: formData.companyId,
+        userId: user.id,
       };
-      setSnackbar({
-        open: true,
-        message: `${formData.name} şubesi başarıyla güncellendi!`,
-        severity: 'success',
-      });
-    } else {
+      updateBranchMutation.mutate({ id: selectedBranch.id, data: updateData });
+    } else if (user?.id) {
       // Yeni şube ekleme
-      const newBranch = {
-        id: initialBranches.length + 1,
-        ...formData,
-        company: { id: 1, name: 'ABC Şirketi' }, // Mock şirket verisi
+      const createData: CreateBranchRequestType = {
+        code: formData.code,
+        name: formData.name,
+        address: formData.address,
+        phone: formData.phone,
+        isActive: formData.isActive,
+        companyId: formData.companyId,
+        userId: user.id,
       };
-      initialBranches.push(newBranch);
-      setSnackbar({
-        open: true,
-        message: `${formData.name} şubesi başarıyla eklendi!`,
-        severity: 'success',
-      });
+      createBranchMutation.mutate(createData);
     }
 
     setFormModalOpen(false);
@@ -163,11 +226,30 @@ export function BranchesView() {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  const filteredBranches = initialBranches.filter(
+  const filteredBranches = branches.filter(
     (branch) =>
       branch.name.toLowerCase().includes(filterName.toLowerCase()) ||
       branch.code.toLowerCase().includes(filterName.toLowerCase())
   );
+
+  // Loading and error states
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography>Şubeler yükleniyor...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Şubeler yüklenirken bir hata oluştu: {(error as Error).message}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -204,6 +286,7 @@ export function BranchesView() {
                 <TableCell>Şirket</TableCell>
                 <TableCell>Adres</TableCell>
                 <TableCell>Telefon</TableCell>
+                <TableCell>Depolar</TableCell>
                 <TableCell>Durum</TableCell>
                 <TableCell>İşlemler</TableCell>
               </TableRow>
@@ -238,7 +321,19 @@ export function BranchesView() {
       <Dialog open={formModalOpen} onClose={handleCloseForm} maxWidth="md" fullWidth>
         <DialogTitle>{editMode ? 'Şube Düzenle' : 'Yeni Şube'}</DialogTitle>
         <DialogContent>
-          <BranchForm onSubmit={handleSubmitForm} onCancel={handleCloseForm} isEditMode={editMode} initialData={selectedBranch} />
+          <BranchForm 
+            onSubmit={handleSubmitForm} 
+            onCancel={handleCloseForm} 
+            isEditMode={editMode} 
+            initialData={selectedBranch ? {
+              code: selectedBranch.code,
+              name: selectedBranch.name,
+              address: selectedBranch.address,
+              phone: selectedBranch.phone,
+              companyId: 0, // TODO: Get companyId from selectedBranch
+              isActive: selectedBranch.isActive,
+            } : undefined} 
+          />
         </DialogContent>
       </Dialog>
 
@@ -257,10 +352,18 @@ export function BranchesView() {
               <Typography variant="body1">{selectedBranch.code}</Typography>
               <Typography variant="subtitle2" color="text.secondary">Şube Adı</Typography>
               <Typography variant="body1">{selectedBranch.name}</Typography>
+              <Typography variant="subtitle2" color="text.secondary">Şirket</Typography>
+              <Typography variant="body1">{selectedBranch.companyName}</Typography>
               <Typography variant="subtitle2" color="text.secondary">Adres</Typography>
               <Typography variant="body1">{selectedBranch.address}</Typography>
               <Typography variant="subtitle2" color="text.secondary">Telefon</Typography>
               <Typography variant="body1">{selectedBranch.phone}</Typography>
+              <Typography variant="subtitle2" color="text.secondary">Depolar</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {selectedBranch.warehouseNames.map((warehouseName, index) => (
+                  <Chip key={index} label={warehouseName} size="small" variant="outlined" />
+                ))}
+              </Box>
               <Typography variant="subtitle2" color="text.secondary">Durum</Typography>
               <Chip label={selectedBranch.isActive ? 'Aktif' : 'Pasif'} color={selectedBranch.isActive ? 'success' : 'error'} size="small" />
             </Box>

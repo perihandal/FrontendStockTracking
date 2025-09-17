@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -13,9 +13,10 @@ import InputLabel from '@mui/material/InputLabel';
 import Typography from '@mui/material/Typography';
 import FormControl from '@mui/material/FormControl';
 
-import { Iconify } from 'src/components/iconify';
 import { StockService } from 'src/services/api/stock-service';
 import { WarehouseService } from 'src/services/api/warehouse-service';
+
+import { Iconify } from 'src/components/iconify';
 
 export type StockTransactionFormData = {
   transactionType: 'Giriş' | 'Çıkış' | 'Transfer';
@@ -79,8 +80,8 @@ export function StockTransactionForm({
     queryFn: async () => {
       const result = await WarehouseService.getWarehouses();
       console.log('🔍 Debug - Raw warehouses API response:', result);
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to fetch warehouses');
+      if (!result.isSuccess) {
+        throw new Error(Array.isArray(result.errorMessage) ? result.errorMessage.join(', ') : result.errorMessage || 'Failed to fetch warehouses');
       }
       console.log('🔍 Debug - Warehouses data from API:', result.data);
       return result.data;

@@ -22,15 +22,17 @@ import DialogContent from '@mui/material/DialogContent';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
-import { Iconify } from 'src/components/iconify';
-import StockTransactionService, { type StockTransactionDto, type CreateStockTransactionRequest, type UpdateStockTransactionRequest } from 'src/services/api/stock-transaction-service';
-import { ReportService } from 'src/services/api/report-service';
-import { useAuth } from 'src/contexts/auth-context';
 import { mapEnumToTransactionType, mapFormTransactionTypeToEnum } from 'src/utils/stock-card-utils';
 
-import { StockTransactionForm, type StockTransactionFormData } from '../stock-transaction-form';
+import { useAuth } from 'src/contexts/auth-context';
+import { ReportService } from 'src/services/api/report-service';
+import StockTransactionService, { type StockTransactionDto, type CreateStockTransactionRequest, type UpdateStockTransactionRequest } from 'src/services/api/stock-transaction-service';
+
+import { Iconify } from 'src/components/iconify';
+
 import { StockTransactionsTableRow } from '../stock-transactions-table-row';
 import { StockTransactionsTableToolbar } from '../stock-transactions-table-toolbar';
+import { StockTransactionForm, type StockTransactionFormData } from '../stock-transaction-form';
 
 
 export function StockTransactionsView() {
@@ -86,17 +88,17 @@ export function StockTransactionsView() {
       setSelectedTransaction(null);
       setEditMode(false);
     },
-    onError: (error: any) => {
-      console.error('❌ Create stock transaction error:', error);
+    onError: (err: any) => {
+      console.error('❌ Create stock transaction error:', err);
       setSnackbar({
         open: true,
-        message: `Hata: ${error.response?.data?.message || 'Stok işlemi eklenemedi'}`,
+        message: `Hata: ${(err as any)?.response?.data?.message || 'Stok işlemi eklenemedi'}`,
         severity: 'error',
       });
     },
-    onSettled: (data, error) => {
-      console.log('🔍 Create mutation settled - data:', data, 'error:', error);
-      if (!error) {
+    onSettled: (data, err) => {
+      console.log('🔍 Create mutation settled - data:', data, 'error:', err);
+      if (!err) {
         console.log('🔄 Invalidating queries from onSettled...');
         queryClient.invalidateQueries({ queryKey: ['stockTransactions'] });
         console.log('✅ Queries invalidated from onSettled');
@@ -127,11 +129,11 @@ export function StockTransactionsView() {
       setSelectedTransaction(null);
       setEditMode(false);
     },
-    onError: (error: any) => {
-      console.error('❌ Update stock transaction error:', error);
+    onError: (err: any) => {
+      console.error('❌ Update stock transaction error:', err);
       setSnackbar({
         open: true,
-        message: `Hata: ${error.response?.data?.message || 'Stok işlemi güncellenemedi'}`,
+        message: `Hata: ${(err as any)?.response?.data?.message || 'Stok işlemi güncellenemedi'}`,
         severity: 'error',
       });
     },
@@ -148,11 +150,11 @@ export function StockTransactionsView() {
         severity: 'success',
       });
     },
-    onError: (error: any) => {
-      console.error('❌ Delete stock transaction error:', error);
+    onError: (err: any) => {
+      console.error('❌ Delete stock transaction error:', err);
       setSnackbar({
         open: true,
-        message: `Hata: ${error.response?.data?.message || 'Stok işlemi silinemedi'}`,
+        message: `Hata: ${(err as any)?.response?.data?.message || 'Stok işlemi silinemedi'}`,
         severity: 'error',
       });
     },
@@ -266,8 +268,8 @@ export function StockTransactionsView() {
         message: 'Excel raporu başarıyla indirildi!',
         severity: 'success',
       });
-    } catch (error) {
-      console.error('❌ Excel raporu indirme hatası:', error);
+    } catch (err) {
+      console.error('❌ Excel raporu indirme hatası:', err);
       setSnackbar({
         open: true,
         message: 'Excel raporu indirilemedi!',

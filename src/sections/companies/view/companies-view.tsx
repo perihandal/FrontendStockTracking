@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react';
 
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -25,57 +26,30 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
+import { useAuth } from 'src/contexts/auth-context';
+import { CompanyService, type CompanyDto, type CreateCompanyRequest, type UpdateCompanyRequest } from 'src/services/api';
+
 import { Iconify } from 'src/components/iconify';
 
 import { CompanyForm } from '../company-form';
 
-type Company = {
-  id: number;
-  code: string;
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  isActive: boolean;
-};
-
 type CompanyFormData = {
   code: string;
   name: string;
+  taxNumber: string;
   address: string;
   phone: string;
-  email: string;
   isActive: boolean;
 };
 
-// Mock veri
-const initialCompanies: Company[] = [
-  {
-    id: 1,
-    code: 'COMP001',
-    name: 'ABC Şirketi',
-    address: 'İstanbul, Türkiye',
-    phone: '0212 123 45 67',
-    email: 'info@abc.com',
-    isActive: true,
-  },
-  {
-    id: 2,
-    code: 'COMP002',
-    name: 'XYZ Şirketi',
-    address: 'Ankara, Türkiye',
-    phone: '0312 987 65 43',
-    email: 'info@xyz.com',
-    isActive: true,
-  },
-];
-
 export function CompaniesView() {
-  const [companies, setCompanies] = useState<Company[]>(initialCompanies);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filterName, setFilterName] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<CompanyDto | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -84,6 +58,101 @@ export function CompaniesView() {
     message: string;
     severity: 'success' | 'error';
   }>({ open: false, message: '', severity: 'success' });
+
+  // API Queries
+  const { data: companiesResponse, isLoading, error } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      console.log('🔍 CompaniesView: Starting to fetch companies...');
+      try {
+        const result = await CompanyService.getCompanies();
+        console.log('🔍 CompaniesView: API response received:', result);
+        console.log('🔍 CompaniesView: API response data field:', result.data);
+        console.log('🔍 CompaniesView: API response keys:', Object.keys(result));
+        
+        // Backend'den dönen ServiceResult formatında success kontrolü
+        if (result.errorMessage && result.errorMessage.length > 0) {
+          console.error('❌ CompaniesView: API returned errors:', result.errorMessage);
+          throw new Error(result.errorMessage.join(', ') || 'Failed to fetch companies');
+        }
+        console.log('✅ CompaniesView: Companies fetched successfully:', result.data);
+        return result.data;
+      } catch (apiError) {
+        console.error('❌ CompaniesView: API call failed:', apiError);
+        throw apiError;
+      }
+    },
+  });
+
+  const companies = Array.isArray(companiesResponse) ? companiesResponse : [];
+
+  // Mutations
+  const createCompanyMutation = useMutation({
+    mutationFn: (data: CreateCompanyRequest) => CompanyService.createCompany(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setSnackbar({ open: true, message: 'Şirket başarıyla oluşturuldu!', severity: 'success' });
+      setFormModalOpen(false);
+      setSelectedCompany(null);
+    },
+    onError: (apiError: any) => {
+      const errorMessage = apiError.response?.data?.errorMessage?.join(', ') || 
+                          apiError.response?.data?.message || 
+                          'Şirket oluşturulamadı';
+      setSnackbar({ 
+        open: true, 
+        message: `Hata: ${errorMessage}`, 
+        severity: 'error' 
+      });
+    }
+  });
+
+  const updateCompanyMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateCompanyRequest }) => 
+      CompanyService.updateCompany(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setSnackbar({ open: true, message: 'Şirket başarıyla güncellendi!', severity: 'success' });
+      setFormModalOpen(false);
+      setSelectedCompany(null);
+      setEditMode(false);
+    },
+    onError: (apiError: any) => {
+      const errorMessage = apiError.response?.data?.errorMessage?.join(', ') || 
+                          apiError.response?.data?.message || 
+                          'Şirket güncellenemedi';
+      setSnackbar({ 
+        open: true, 
+        message: `Hata: ${errorMessage}`, 
+        severity: 'error' 
+      });
+    }
+  });
+
+  const deleteCompanyMutation = useMutation({
+    mutationFn: (id: number) => {
+      console.log('🔍 CompaniesView: Deleting company with id:', id);
+      return CompanyService.deleteCompany(id);
+    },
+    onSuccess: () => {
+      console.log('✅ CompaniesView: Company deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setSnackbar({
+        open: true,
+        message: 'Şirket başarıyla silindi!',
+        severity: 'success',
+      });
+    },
+    onError: (err: any) => {
+      console.error('❌ CompaniesView: Failed to delete company:', err);
+      const errorMessage = err?.response?.data?.errorMessage?.join(', ') || 'Şirket silinirken bir hata oluştu';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    },
+  });
 
   const handleChangePage = (
     event: React.MouseEvent<HTMLButtonElement> | null,
@@ -102,25 +171,20 @@ export function CompaniesView() {
     setPage(0);
   };
 
-  const handleView = (company: Company) => {
+  const handleView = (company: CompanyDto) => {
     setSelectedCompany(company);
     setDetailModalOpen(true);
   };
 
-  const handleEdit = (company: Company) => {
+  const handleEdit = (company: CompanyDto) => {
     setSelectedCompany(company);
     setEditMode(true);
     setFormModalOpen(true);
   };
 
-  const handleDelete = (company: Company) => {
+  const handleDelete = (company: CompanyDto) => {
     if (window.confirm(`${company.name} şirketini silmek istediğinizden emin misiniz?`)) {
-      setCompanies(prev => prev.filter(c => c.id !== company.id));
-      setSnackbar({
-        open: true,
-        message: `${company.name} şirketi başarıyla silindi!`,
-        severity: 'success',
-      });
+      deleteCompanyMutation.mutate(company.id);
     }
   };
 
@@ -133,37 +197,26 @@ export function CompaniesView() {
   const handleSubmitForm = (formData: CompanyFormData) => {
     if (editMode && selectedCompany) {
       // Düzenleme
-      const updatedCompany: Company = {
-        ...selectedCompany,
-        ...formData,
+      const updateData: UpdateCompanyRequest = {
+        name: formData.name,
+        code: formData.code,
+        taxNumber: formData.taxNumber,
+        address: formData.address,
+        phone: formData.phone,
       };
-
-      setCompanies(prev => 
-        prev.map(c => c.id === selectedCompany.id ? updatedCompany : c)
-      );
-      setSnackbar({
-        open: true,
-        message: `${formData.name} şirketi başarıyla güncellendi!`,
-        severity: 'success',
-      });
+      updateCompanyMutation.mutate({ id: selectedCompany.id, data: updateData });
     } else {
       // Yeni şirket
-      const newCompany: Company = {
-        id: Math.max(...companies.map(c => c.id)) + 1,
-        ...formData,
+      const createData: CreateCompanyRequest = {
+        name: formData.name,
+        code: formData.code,
+        taxNumber: formData.taxNumber,
+        address: formData.address,
+        phone: formData.phone,
+        userId: Number(user?.id),
       };
-
-      setCompanies(prev => [newCompany, ...prev]);
-      setSnackbar({
-        open: true,
-        message: `${formData.name} şirketi başarıyla eklendi!`,
-        severity: 'success',
-      });
+      createCompanyMutation.mutate(createData);
     }
-
-    setFormModalOpen(false);
-    setSelectedCompany(null);
-    setEditMode(false);
   };
 
   const handleCloseForm = () => {
@@ -180,6 +233,24 @@ export function CompaniesView() {
     company.name.toLowerCase().includes(filterName.toLowerCase()) ||
     company.code.toLowerCase().includes(filterName.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <Typography>Şirketler yükleniyor...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Şirketler yüklenirken bir hata oluştu: {error.message}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -219,9 +290,11 @@ export function CompaniesView() {
               <TableRow>
                 <TableCell>Şirket Kodu</TableCell>
                 <TableCell>Şirket Adı</TableCell>
+                <TableCell>Vergi Numarası</TableCell>
                 <TableCell>Adres</TableCell>
                 <TableCell>Telefon</TableCell>
-                <TableCell>E-posta</TableCell>
+                <TableCell>Şubeler</TableCell>
+                <TableCell>Depolar</TableCell>
                 <TableCell>Durum</TableCell>
                 <TableCell>İşlemler</TableCell>
               </TableRow>
@@ -233,9 +306,57 @@ export function CompaniesView() {
                   <TableRow key={company.id} hover>
                     <TableCell>{company.code}</TableCell>
                     <TableCell>{company.name}</TableCell>
+                    <TableCell>{company.taxNumber}</TableCell>
                     <TableCell>{company.address}</TableCell>
                     <TableCell>{company.phone}</TableCell>
-                    <TableCell>{company.email}</TableCell>
+                    <TableCell>
+                      {company.branchNames && company.branchNames.length > 0 ? (
+                        <Stack direction="column" spacing={0.5}>
+                          {company.branchNames.slice(0, 2).map((branch, index) => (
+                            <Chip
+                              key={index}
+                              label={branch}
+                              size="small"
+                              variant="outlined"
+                              color="default"
+                            />
+                          ))}
+                          {company.branchNames.length > 2 && (
+                            <Typography variant="caption" color="text.secondary">
+                              +{company.branchNames.length - 2} daha
+                            </Typography>
+                          )}
+                        </Stack>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          Şube yok
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {company.warehouseNames && company.warehouseNames.length > 0 ? (
+                        <Stack direction="column" spacing={0.5}>
+                          {company.warehouseNames.slice(0, 2).map((warehouse, index) => (
+                            <Chip
+                              key={index}
+                              label={warehouse}
+                              size="small"
+                              variant="outlined"
+                              color="default"
+                            />
+                          ))}
+                          {company.warehouseNames.length > 2 && (
+                            <Typography variant="caption" color="text.secondary">
+                              +{company.warehouseNames.length - 2} daha
+                            </Typography>
+                          )}
+                        </Stack>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          Depo yok
+                        </Typography>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Chip
                         label={company.isActive ? 'Aktif' : 'Pasif'}
@@ -304,9 +425,9 @@ export function CompaniesView() {
             initialData={selectedCompany ? {
               code: selectedCompany.code,
               name: selectedCompany.name,
+              taxNumber: selectedCompany.taxNumber,
               address: selectedCompany.address,
               phone: selectedCompany.phone,
-              email: selectedCompany.email,
               isActive: selectedCompany.isActive,
             } : undefined}
           />
@@ -336,17 +457,63 @@ export function CompaniesView() {
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ flex: '1 1 45%' }}>
-                  <Typography variant="subtitle2" color="text.secondary">Telefon</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCompany.phone}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary">Vergi Numarası</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCompany.taxNumber}</Typography>
                 </Box>
                 <Box sx={{ flex: '1 1 45%' }}>
-                  <Typography variant="subtitle2" color="text.secondary">E-posta</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCompany.email}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary">Telefon</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedCompany.phone}</Typography>
                 </Box>
               </Box>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">Adres</Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>{selectedCompany.address}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ flex: '1 1 45%' }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                    Şubeler ({selectedCompany.branchNames?.length || 0})
+                  </Typography>
+                  {selectedCompany.branchNames && selectedCompany.branchNames.length > 0 ? (
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {selectedCompany.branchNames.map((branch, index) => (
+                        <Chip
+                          key={index}
+                          label={branch}
+                          size="small"
+                          variant="outlined"
+                          color="default"
+                        />
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Şube bulunmuyor
+                    </Typography>
+                  )}
+                </Box>
+                <Box sx={{ flex: '1 1 45%' }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                    Depolar ({selectedCompany.warehouseNames?.length || 0})
+                  </Typography>
+                  {selectedCompany.warehouseNames && selectedCompany.warehouseNames.length > 0 ? (
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {selectedCompany.warehouseNames.map((warehouse, index) => (
+                        <Chip
+                          key={index}
+                          label={warehouse}
+                          size="small"
+                          variant="outlined"
+                          color="default"
+                        />
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Depo bulunmuyor
+                    </Typography>
+                  )}
+                </Box>
               </Box>
               <Box>
                 <Typography variant="subtitle2" color="text.secondary">Durum</Typography>

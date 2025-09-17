@@ -6,6 +6,7 @@ export interface CreateWarehouseRequest {
   name: string;
   address: string;
   phone: string;
+  isActive: boolean;
   companyId: number;
   branchId: number;
   userId: number;
@@ -16,8 +17,10 @@ export interface UpdateWarehouseRequest {
   name: string;
   address: string;
   phone: string;
+  isActive: boolean;
   companyId: number;
   branchId: number;
+  userId: number;
 }
 
 export interface WarehouseDto {
@@ -31,8 +34,7 @@ export interface WarehouseDto {
   companyName: string;
   branchId: number;
   branchName: string;
-  userId: number;
-  userName: string;
+  userFullName: string;
 }
 
 export interface WarehouseStockDto {
@@ -47,49 +49,77 @@ export interface WarehouseStockDto {
 
 // API Response Types
 export interface ApiResponse<T> {
-  success: boolean;
   data?: T;
-  message?: string;
-  errors?: string[];
+  errorMessage?: string[];
+  isSuccess?: boolean;
+  isFail?: boolean;
+  status?: number;
 }
 
 // Warehouse Service
 export class WarehouseService {
   // Warehouses
   static async getWarehouses(): Promise<ApiResponse<WarehouseDto[]>> {
-    const response = await apiClient.get<{data: WarehouseDto[], errorMessage: string | null}>('/api/warehouse');
-    return {
-      success: true,
-      data: response.data.data,
-      message: 'Warehouses fetched successfully'
-    };
+    console.log('🔍 WarehouseService.getWarehouses: Making API call to /api/Warehouse');
+    try {
+      const response = await apiClient.get('/api/Warehouse');
+      console.log('✅ WarehouseService.getWarehouses: API call successful:', response);
+      return response.data;
+    } catch (error) {
+      console.error('❌ WarehouseService.getWarehouses: API call failed:', error);
+      throw error;
+    }
   }
 
   static async getWarehousesByCompanyId(companyId: number): Promise<ApiResponse<WarehouseDto[]>> {
-    const response = await apiClient.get<{data: WarehouseDto[], errorMessage: string | null}>('/api/warehouse');
+    const response = await apiClient.get<{data: WarehouseDto[], errorMessage: string | null}>('/api/Warehouse');
     if (response.data.data) {
       const filteredWarehouses = response.data.data.filter(warehouse => warehouse.companyId === companyId);
       return {
-        success: true,
         data: filteredWarehouses,
-        message: 'Warehouses fetched successfully'
+        isSuccess: true
       };
     }
     return {
-      success: true,
       data: [],
-      message: 'Warehouses fetched successfully'
+      isSuccess: true
     };
   }
 
   static async createWarehouse(data: CreateWarehouseRequest): Promise<ApiResponse<{ id: number }>> {
-    const response = await apiClient.post('/api/warehouse', data);
-    return response.data;
+    console.log('🔍 WarehouseService.createWarehouse: Making API call to /api/Warehouse with data:', data);
+    try {
+      const response = await apiClient.post('/api/Warehouse', data);
+      console.log('✅ WarehouseService.createWarehouse: API call successful:', response);
+      return response.data;
+    } catch (error) {
+      console.error('❌ WarehouseService.createWarehouse: API call failed:', error);
+      throw error;
+    }
   }
 
   static async updateWarehouse(id: number, data: UpdateWarehouseRequest): Promise<ApiResponse<{ id: number }>> {
-    const response = await apiClient.put(`/api/warehouse/${id}`, data);
-    return response.data;
+    console.log('🔍 WarehouseService.updateWarehouse: Making API call to /api/Warehouse with id:', id);
+    try {
+      const response = await apiClient.put(`/api/Warehouse?id=${id}`, data);
+      console.log('✅ WarehouseService.updateWarehouse: API call successful:', response);
+      return response.data;
+    } catch (error) {
+      console.error('❌ WarehouseService.updateWarehouse: API call failed:', error);
+      throw error;
+    }
+  }
+
+  static async deleteWarehouse(id: number): Promise<ApiResponse<{ id: number }>> {
+    console.log('🔍 WarehouseService.deleteWarehouse: Making API call to /api/Warehouse with id:', id);
+    try {
+      const response = await apiClient.delete(`/api/Warehouse/${id}`);
+      console.log('✅ WarehouseService.deleteWarehouse: API call successful:', response);
+      return response.data;
+    } catch (error) {
+      console.error('❌ WarehouseService.deleteWarehouse: API call failed:', error);
+      throw error;
+    }
   }
 
   // Warehouse Stock
@@ -111,11 +141,11 @@ export class WarehouseService {
   // Helper methods
   static async getWarehouseStockSummary(warehouseId: number): Promise<ApiResponse<WarehouseStockDto[]>> {
     const allStocks = await this.getWarehouseStocks();
-    if (allStocks.success && allStocks.data) {
+    if (allStocks.isSuccess && allStocks.data) {
       const warehouseStocks = allStocks.data.filter(stock => stock.warehouseId === warehouseId);
       return {
-        success: true,
-        data: warehouseStocks
+        data: warehouseStocks,
+        isSuccess: true
       };
     }
     return allStocks;
@@ -123,11 +153,11 @@ export class WarehouseService {
 
   static async getStockCardStockSummary(stockCardId: number): Promise<ApiResponse<WarehouseStockDto[]>> {
     const allStocks = await this.getWarehouseStocks();
-    if (allStocks.success && allStocks.data) {
+    if (allStocks.isSuccess && allStocks.data) {
       const stockCardStocks = allStocks.data.filter(stock => stock.stockCardId === stockCardId);
       return {
-        success: true,
-        data: stockCardStocks
+        data: stockCardStocks,
+        isSuccess: true
       };
     }
     return allStocks;

@@ -5,6 +5,7 @@ import axios from 'axios';
 // API Base Configuration
 const API_BASE_URL = 'http://localhost:5000'; // Hardcode for now
 console.log('🚀 API Client initialized with URL:', API_BASE_URL);
+console.log('🚀 API Client base URL check:', API_BASE_URL);
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({

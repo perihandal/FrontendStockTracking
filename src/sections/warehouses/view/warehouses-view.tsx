@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react';
 
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -25,43 +26,136 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
+import { useAuth } from 'src/contexts/auth-context';
+import { WarehouseService, type WarehouseDto, type CreateWarehouseRequest, type UpdateWarehouseRequest } from 'src/services/api';
+
 import { Iconify } from 'src/components/iconify';
 
-// Mock veri
-const mockWarehouses = [
-  {
-    id: 1,
-    code: 'WH001',
-    name: 'Merkez Depo',
-    address: 'İstanbul, Türkiye',
-    phone: '0212 123 45 67',
-    isActive: true,
-    company: { id: 1, name: 'ABC Şirketi' },
-    branch: { id: 1, name: 'Merkez Şube' },
-  },
-  {
-    id: 2,
-    code: 'WH002',
-    name: 'Ankara Depo',
-    address: 'Ankara, Türkiye',
-    phone: '0312 987 65 43',
-    isActive: true,
-    company: { id: 1, name: 'ABC Şirketi' },
-    branch: { id: 2, name: 'Ankara Şubesi' },
-  },
-];
+import { WarehouseForm } from '../warehouse-form';
+
+// Warehouse form data type
+type WarehouseFormData = {
+  code: string;
+  name: string;
+  address: string;
+  phone: string;
+  companyId: number;
+  branchId: number;
+  isActive: boolean;
+};
+
 
 export function WarehousesView() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filterName, setFilterName] = useState('');
-  const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<WarehouseDto | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: 'success' | 'error';
   }>({ open: false, message: '', severity: 'success' });
+
+  // API Queries
+  const { data: warehousesResult, isLoading, error } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: async () => {
+      console.log('🔍 WarehousesView: Fetching warehouses from API');
+      const result = await WarehouseService.getWarehouses();
+      console.log('📊 WarehousesView: API response:', result);
+      if (result.data) {
+        console.log('📦 WarehousesView: Warehouses data:');
+        result.data.forEach((warehouse, index) => {
+          console.log(`📦 [${index}] ID=${warehouse.id}, Code='${warehouse.code}', Name='${warehouse.name}'`);
+        });
+      }
+      return result;
+    },
+  });
+
+  // Mutations
+  const createWarehouseMutation = useMutation({
+    mutationFn: (data: CreateWarehouseRequest) => {
+      console.log('🔍 WarehousesView: Creating warehouse with data:', data);
+      return WarehouseService.createWarehouse(data);
+    },
+    onSuccess: () => {
+      console.log('✅ WarehousesView: Warehouse created successfully');
+      queryClient.invalidateQueries({ queryKey: ['warehouses'] });
+      setSnackbar({
+        open: true,
+        message: 'Depo başarıyla eklendi!',
+        severity: 'success',
+      });
+    },
+    onError: (err: any) => {
+      console.error('❌ WarehousesView: Failed to create warehouse:', err);
+      const errorMessage = (err as any)?.response?.data?.errorMessage?.join(', ') || 'Depo eklenirken bir hata oluştu';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    },
+  });
+
+  const updateWarehouseMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateWarehouseRequest }) => {
+      console.log('🔍 WarehousesView: Updating warehouse with id:', id, 'data:', data);
+      return WarehouseService.updateWarehouse(id, data);
+    },
+    onSuccess: () => {
+      console.log('✅ WarehousesView: Warehouse updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['warehouses'] });
+      setSnackbar({
+        open: true,
+        message: 'Depo başarıyla güncellendi!',
+        severity: 'success',
+      });
+    },
+    onError: (err: any) => {
+      console.error('❌ WarehousesView: Failed to update warehouse:', err);
+      const errorMessage = (err as any)?.response?.data?.errorMessage?.join(', ') || 'Depo güncellenirken bir hata oluştu';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    },
+  });
+
+  const deleteWarehouseMutation = useMutation({
+    mutationFn: (id: number) => {
+      console.log('🔍 WarehousesView: Deleting warehouse with id:', id);
+      return WarehouseService.deleteWarehouse(id);
+    },
+    onSuccess: () => {
+      console.log('✅ WarehousesView: Warehouse deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['warehouses'] });
+      setSnackbar({
+        open: true,
+        message: 'Depo başarıyla silindi!',
+        severity: 'success',
+      });
+    },
+    onError: (err: any) => {
+      console.error('❌ WarehousesView: Failed to delete warehouse:', err);
+      const errorMessage = (err as any)?.response?.data?.errorMessage?.join(', ') || 'Depo silinirken bir hata oluştu';
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: 'error',
+      });
+    },
+  });
+
+  const warehouses = warehousesResult?.data || [];
 
   const handleChangePage = (
     event: React.MouseEvent<HTMLButtonElement> | null,
@@ -80,43 +174,96 @@ export function WarehousesView() {
     setPage(0);
   };
 
-  const handleView = (warehouse: any) => {
+  const handleView = (warehouse: WarehouseDto) => {
     setSelectedWarehouse(warehouse);
     setDetailModalOpen(true);
   };
 
-  const handleEdit = (warehouse: any) => {
-    // Düzenleme işlemi için şimdilik sadece mesaj göster
-    setSnackbar({
-      open: true,
-      message: `${warehouse.name} deposu düzenleme özelliği yakında eklenecek!`,
-      severity: 'success',
-    });
+  const handleEdit = (warehouse: WarehouseDto) => {
+    setSelectedWarehouse(warehouse);
+    setEditMode(true);
+    setFormModalOpen(true);
   };
 
-  const handleDelete = (warehouse: any) => {
+  const handleDelete = (warehouse: WarehouseDto) => {
     if (window.confirm(`${warehouse.name} deposunu silmek istediğinizden emin misiniz?`)) {
-      // Mock veriden sil
-      const index = mockWarehouses.findIndex(w => w.id === warehouse.id);
-      if (index > -1) {
-        mockWarehouses.splice(index, 1);
-        setSnackbar({
-          open: true,
-          message: `${warehouse.name} deposu başarıyla silindi!`,
-          severity: 'success',
-        });
-      }
+      deleteWarehouseMutation.mutate(warehouse.id);
     }
+  };
+
+  const handleNewWarehouse = () => {
+    setSelectedWarehouse(null);
+    setEditMode(false);
+    setFormModalOpen(true);
+  };
+
+  const handleSubmitForm = (formData: WarehouseFormData) => {
+    if (editMode && selectedWarehouse && user?.id) {
+      // Depo güncelleme işlemi
+      const updateData: UpdateWarehouseRequest = {
+        code: formData.code,
+        name: formData.name,
+        address: formData.address,
+        phone: formData.phone,
+        isActive: formData.isActive,
+        companyId: formData.companyId,
+        branchId: formData.branchId,
+        userId: user.id,
+      };
+      updateWarehouseMutation.mutate({ id: selectedWarehouse.id, data: updateData });
+    } else if (user?.id) {
+      // Yeni depo ekleme
+      const createData: CreateWarehouseRequest = {
+        code: formData.code,
+        name: formData.name,
+        address: formData.address,
+        phone: formData.phone,
+        isActive: formData.isActive,
+        companyId: formData.companyId,
+        branchId: formData.branchId,
+        userId: user.id,
+      };
+      createWarehouseMutation.mutate(createData);
+    }
+
+    setFormModalOpen(false);
+    setSelectedWarehouse(null);
+    setEditMode(false);
+  };
+
+  const handleCloseForm = () => {
+    setFormModalOpen(false);
+    setSelectedWarehouse(null);
+    setEditMode(false);
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  const filteredWarehouses = mockWarehouses.filter((warehouse) =>
+  const filteredWarehouses = warehouses.filter((warehouse) =>
     warehouse.name.toLowerCase().includes(filterName.toLowerCase()) ||
     warehouse.code.toLowerCase().includes(filterName.toLowerCase())
   );
+
+  // Loading and error states
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Typography>Depolar yükleniyor...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Depolar yüklenirken bir hata oluştu: {(error as Error).message}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -127,6 +274,7 @@ export function WarehousesView() {
         <Button
           variant="contained"
           startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={handleNewWarehouse}
         >
           Yeni Depo
         </Button>
@@ -170,8 +318,8 @@ export function WarehousesView() {
                   <TableRow key={warehouse.id} hover>
                     <TableCell>{warehouse.code}</TableCell>
                     <TableCell>{warehouse.name}</TableCell>
-                    <TableCell>{warehouse.company.name}</TableCell>
-                    <TableCell>{warehouse.branch.name}</TableCell>
+                    <TableCell>{warehouse.companyName}</TableCell>
+                    <TableCell>{warehouse.branchName}</TableCell>
                     <TableCell>{warehouse.address}</TableCell>
                     <TableCell>{warehouse.phone}</TableCell>
                     <TableCell>
@@ -226,6 +374,27 @@ export function WarehousesView() {
         />
       </Card>
 
+      {/* Depo Form Modal */}
+      <Dialog open={formModalOpen} onClose={handleCloseForm} maxWidth="md" fullWidth>
+        <DialogTitle>{editMode ? 'Depo Düzenle' : 'Yeni Depo'}</DialogTitle>
+        <DialogContent>
+          <WarehouseForm 
+            onSubmit={handleSubmitForm} 
+            onCancel={handleCloseForm} 
+            isEditMode={editMode} 
+            initialData={selectedWarehouse ? {
+              code: selectedWarehouse.code,
+              name: selectedWarehouse.name,
+              address: selectedWarehouse.address,
+              phone: selectedWarehouse.phone,
+              companyId: selectedWarehouse.companyId,
+              branchId: selectedWarehouse.branchId,
+              isActive: selectedWarehouse.isActive,
+            } : undefined} 
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Detay Modal */}
       <Dialog open={detailModalOpen} onClose={() => setDetailModalOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
@@ -250,11 +419,11 @@ export function WarehousesView() {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ flex: '1 1 45%' }}>
                   <Typography variant="subtitle2" color="text.secondary">Şirket</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedWarehouse.company.name}</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedWarehouse.companyName}</Typography>
                 </Box>
                 <Box sx={{ flex: '1 1 45%' }}>
                   <Typography variant="subtitle2" color="text.secondary">Şube</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedWarehouse.branch.name}</Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedWarehouse.branchName}</Typography>
                 </Box>
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>

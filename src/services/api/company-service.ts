@@ -26,8 +26,9 @@ export interface CompanyDto {
   address: string;
   phone: string;
   isActive: boolean;
-  userId: number;
   userName: string;
+  branchNames?: string[];
+  warehouseNames?: string[];
 }
 
 export interface CreateBranchRequest {
@@ -63,18 +64,34 @@ export interface BranchDto {
 
 // API Response Types
 export interface ApiResponse<T> {
-  success: boolean;
   data?: T;
-  message?: string;
-  errors?: string[];
+  errorMessage?: string[];
+  isSuccess?: boolean;
+  isFail?: boolean;
+  status?: number;
 }
 
 // Company Service
 export class CompanyService {
   // Companies
   static async getCompanies(): Promise<ApiResponse<CompanyDto[]>> {
-    const response = await apiClient.get('/api/Company');
-    return response.data;
+    console.log('🔍 CompanyService.getCompanies: Making API call to /api/Company');
+    try {
+      const response = await apiClient.get('/api/Company');
+      console.log('✅ CompanyService.getCompanies: API call successful:', response);
+      console.log('🔍 CompanyService.getCompanies: Response data:', response.data);
+      console.log('🔍 CompanyService.getCompanies: Response status:', response.status);
+      return response.data;
+    } catch (error) {
+      console.error('❌ CompanyService.getCompanies: API call failed:', error);
+      console.error('❌ CompanyService.getCompanies: Error details:', {
+        message: (error as any).message,
+        response: (error as any).response,
+        request: (error as any).request,
+        code: (error as any).code
+      });
+      throw error;
+    }
   }
 
   static async createCompany(data: CreateCompanyRequest): Promise<ApiResponse<{ id: number }>> {
@@ -83,8 +100,27 @@ export class CompanyService {
   }
 
   static async updateCompany(id: number, data: UpdateCompanyRequest): Promise<ApiResponse<{ id: number }>> {
-    const response = await apiClient.put(`/api/Company/${id}`, data);
-    return response.data;
+    console.log('🔍 CompanyService.updateCompany: Making API call to /api/Company with id:', id);
+    try {
+      const response = await apiClient.put(`/api/Company?id=${id}`, data);
+      console.log('✅ CompanyService.updateCompany: API call successful:', response);
+      return response.data;
+    } catch (error) {
+      console.error('❌ CompanyService.updateCompany: API call failed:', error);
+      throw error;
+    }
+  }
+
+  static async deleteCompany(id: number): Promise<ApiResponse<{ id: number }>> {
+    console.log('🔍 CompanyService.deleteCompany: Making API call to /api/Company with id:', id);
+    try {
+      const response = await apiClient.delete(`/api/Company/${id}`);
+      console.log('✅ CompanyService.deleteCompany: API call successful:', response);
+      return response.data;
+    } catch (error) {
+      console.error('❌ CompanyService.deleteCompany: API call failed:', error);
+      throw error;
+    }
   }
 
   // Branches
@@ -151,7 +187,7 @@ export class CompanyService {
 
   static async getCompanyById(companyId: number): Promise<CompanyDto | null> {
     const allCompanies = await this.getCompanies();
-    if (allCompanies.success && allCompanies.data) {
+    if (allCompanies.isSuccess && allCompanies.data) {
       return allCompanies.data.find(company => company.id === companyId) || null;
     }
     return null;

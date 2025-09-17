@@ -1,18 +1,20 @@
 import { useState, useCallback } from 'react';
-import Alert from '@mui/material/Alert';
+
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
+import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import CircularProgress from '@mui/material/CircularProgress';
 
-import { useAuth } from 'src/contexts/auth-context';
 import { useRouter } from 'src/routes/hooks';
 
+import { useAuth } from 'src/contexts/auth-context';
+
 import { Iconify } from 'src/components/iconify';
-import { Divider } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
@@ -129,7 +131,7 @@ export function SignInView() {
             color: 'text.secondary',
           }}
         >
-          Don't have an account?
+          Don&apos;t have an account?
           <Typography
             component="span"
             variant="subtitle2"

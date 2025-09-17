@@ -83,18 +83,18 @@ export function StockCardForm({ onSubmit, editMode = false, selected, isLoading 
         const result = await CompanyService.getCompanies();
         console.log('✅ Companies API result:', result);
         console.log('✅ Companies data:', result?.data);
-        console.log('✅ Companies success:', result?.success);
-        if (!result?.success) {
+        console.log('✅ Companies success:', result?.isSuccess);
+        if (!result?.isSuccess) {
           console.error('❌ Companies API returned success: false');
-          console.error('❌ Companies API message:', result?.message);
+          console.error('❌ Companies API message:', result?.errorMessage);
         }
         return result;
       } catch (error) {
         console.error('❌ Companies API error:', error);
         console.error('❌ Companies API error details:', {
-          message: error.message,
-          response: error.response,
-          request: error.request
+          message: (error as any).message,
+          response: (error as any).response,
+          request: (error as any).request
         });
         throw error;
       }
@@ -111,18 +111,18 @@ export function StockCardForm({ onSubmit, editMode = false, selected, isLoading 
         const result = await CompanyService.getBranches();
         console.log('✅ Branches API result:', result);
         console.log('✅ Branches data:', result?.data);
-        console.log('✅ Branches success:', result?.success);
-        if (!result?.success) {
+        console.log('✅ Branches success:', result?.isSuccess);
+        if (!result?.isSuccess) {
           console.error('❌ Branches API returned success: false');
-          console.error('❌ Branches API message:', result?.message);
+          console.error('❌ Branches API message:', result?.errorMessage);
         }
         return result;
       } catch (error) {
         console.error('❌ Branches API error:', error);
         console.error('❌ Branches API error details:', {
-          message: error.message,
-          response: error.response,
-          request: error.request
+          message: (error as any).message,
+          response: (error as any).response,
+          request: (error as any).request
         });
         throw error;
       }

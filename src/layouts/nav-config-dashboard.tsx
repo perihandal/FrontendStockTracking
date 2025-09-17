@@ -49,10 +49,25 @@ export const navData = [
     icon: icon('ic-lock'),
   },
   {
+    title: 'Barkodlar',
+    path: '/barcodes',
+    icon: icon('ic-barcode'),
+  },
+  {
     title: 'Kategoriler',
     path: '/categories',
     icon: icon('ic-disabled'),
   },
+      {
+        title: 'Gruplar',
+        path: '/groups',
+        icon: icon('ic-blog'),
+      },
+      {
+        title: 'Fiyat Yönetimi',
+        path: '/prices',
+        icon: icon('ic-analytics'),
+      },
   {
     title: 'Kullanıcılar',
     path: '/users',

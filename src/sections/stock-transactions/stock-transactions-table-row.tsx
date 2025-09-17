@@ -1,4 +1,7 @@
 import Box from '@mui/material/Box';
+import type { StockTransactionDto } from 'src/services/api/stock-transaction-service';
+
+import { mapEnumToTransactionType } from 'src/utils/stock-card-utils';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import TableRow from '@mui/material/TableRow';
@@ -7,8 +10,6 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { Iconify } from 'src/components/iconify';
-import type { StockTransactionDto } from 'src/services/api/stock-transaction-service';
-import { mapEnumToTransactionType } from 'src/utils/stock-card-utils';
 
 type StockTransactionsTableRowProps = {
   transaction: StockTransactionDto;

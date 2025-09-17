@@ -1,5 +1,5 @@
 
-import type { StockCardDto, CreateStockCardRequest, UpdateStockCardRequest } from 'src/services/api';
+import type { StockCardDto, CreateStockCardRequest, UpdateStockCardRequest, StockCardType } from 'src/services/api';
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +23,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { mapStockCardTypeToEnum, mapEnumToStockCardType, mapBarcodeTypeToEnum } from 'src/utils/stock-card-utils';
 import { StockService } from 'src/services/api';
 import { useAuth } from 'src/contexts/auth-context';
 
@@ -31,7 +32,6 @@ import { Iconify } from 'src/components/iconify';
 import { StockCardForm } from '../stock-card-form';
 import { StockCardsTableRow } from '../stock-cards-table-row';
 import { StockCardsTableToolbar } from '../stock-cards-table-toolbar';
-import { mapStockCardTypeToEnum, mapEnumToStockCardType, mapBarcodeTypeToEnum } from 'src/utils/stock-card-utils';
 
 
 export function StockCardsView() {
@@ -131,7 +131,7 @@ export function StockCardsView() {
     // Convert integer enum back to string for form display
     const cardWithStringType = {
       ...card,
-      type: mapEnumToStockCardType(card.type as any)
+      type: mapEnumToStockCardType(card.type as any) as StockCardType
     };
     setSelected(cardWithStringType); 
     setFormOpen(true); 
@@ -159,7 +159,7 @@ export function StockCardsView() {
         tax: data.tax,
         isActive: true, // Default to active
         companyId: data.companyId,
-        userId: Number(user.id), // Convert to number
+        // userId: Number(user.id), // Convert to number - removed as it doesn't exist in UpdateStockCardRequest
         branchId: data.branchId,
         mainGroupId: data.mainGroupId,
         subGroupId: data.subGroupId,
