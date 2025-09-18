@@ -1,6 +1,7 @@
-import apiClient from './api-client';
 import type { PriceDefinition, PriceHistoryDto } from 'src/sections/prices/prices.types';
 import { PriceType, Currency } from 'src/sections/prices/prices.types';
+
+import apiClient from './api-client';
 
 export interface ApiResponse<T> {
   data?: T;

@@ -66,7 +66,7 @@ export interface ApiResponse<T> {
 }
 
 export class StockTransactionService {
-  private baseUrl = '/api/stocktransaction';
+  private baseUrl = '/api/StockTransaction';
 
   // Get all stock transactions
   async getStockTransactions(): Promise<ApiResponse<StockTransactionDto[]>> {
@@ -75,7 +75,7 @@ export class StockTransactionService {
     console.log('✅ Stock transactions API result:', response.data);
     console.log('✅ Stock transactions data:', response.data.data);
     
-    // Backend'den {data: [...], errorMessage: null} yapısında geliyor
+    // Backend'den ServiceResult formatında geliyor: {data: [...], errorMessage: null}
     return {
       success: true,
       data: response.data.data,
@@ -154,6 +154,6 @@ export class StockTransactionService {
   }
 }
 
-// Create instance
+// Create instance for backward compatibility
 const stockTransactionService = new StockTransactionService();
 export default stockTransactionService;

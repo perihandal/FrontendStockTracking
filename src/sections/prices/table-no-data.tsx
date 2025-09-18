@@ -10,7 +10,7 @@ export function TableNoData() {
       }}
     >
       <Iconify
-        icon="solar:file-search-bold"
+        icon="solar:eye-bold"
         sx={{
           width: 64,
           height: 64,

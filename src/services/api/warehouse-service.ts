@@ -64,7 +64,31 @@ export class WarehouseService {
     try {
       const response = await apiClient.get('/api/Warehouse');
       console.log('✅ WarehouseService.getWarehouses: API call successful:', response);
-      return response.data;
+      console.log('🔍 WarehouseService.getWarehouses: Full response object:', response);
+      console.log('🔍 WarehouseService.getWarehouses: Response.data:', response.data);
+      console.log('🔍 WarehouseService.getWarehouses: Response.data type:', typeof response.data);
+      console.log('🔍 WarehouseService.getWarehouses: Response.data keys:', Object.keys(response.data || {}));
+      
+      // Backend'ten gelen response formatını kontrol et
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        console.log('🔍 WarehouseService.getWarehouses: Found data.data format, warehouses count:', response.data.data.length);
+        return {
+          data: response.data.data,
+          isSuccess: !response.data.errorMessage || response.data.errorMessage.length === 0
+        };
+      } else if (Array.isArray(response.data)) {
+        console.log('🔍 WarehouseService.getWarehouses: Found direct array format, warehouses count:', response.data.length);
+        return {
+          data: response.data,
+          isSuccess: true
+        };
+      } else {
+        console.warn('⚠️ WarehouseService.getWarehouses: Unexpected response format:', response.data);
+        return {
+          data: [],
+          isSuccess: false
+        };
+      }
     } catch (error) {
       console.error('❌ WarehouseService.getWarehouses: API call failed:', error);
       throw error;

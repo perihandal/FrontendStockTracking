@@ -81,7 +81,29 @@ export class CompanyService {
       console.log('✅ CompanyService.getCompanies: API call successful:', response);
       console.log('🔍 CompanyService.getCompanies: Response data:', response.data);
       console.log('🔍 CompanyService.getCompanies: Response status:', response.status);
-      return response.data;
+      console.log('🔍 CompanyService.getCompanies: Response.data type:', typeof response.data);
+      console.log('🔍 CompanyService.getCompanies: Response.data keys:', Object.keys(response.data || {}));
+      
+      // Backend'ten gelen response formatını kontrol et
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        console.log('🔍 CompanyService.getCompanies: Found data.data format, companies count:', response.data.data.length);
+        return {
+          data: response.data.data,
+          isSuccess: !response.data.errorMessage || response.data.errorMessage.length === 0
+        };
+      } else if (Array.isArray(response.data)) {
+        console.log('🔍 CompanyService.getCompanies: Found direct array format, companies count:', response.data.length);
+        return {
+          data: response.data,
+          isSuccess: true
+        };
+      } else {
+        console.warn('⚠️ CompanyService.getCompanies: Unexpected response format:', response.data);
+        return {
+          data: [],
+          isSuccess: false
+        };
+      }
     } catch (error) {
       console.error('❌ CompanyService.getCompanies: API call failed:', error);
       console.error('❌ CompanyService.getCompanies: Error details:', {
@@ -125,8 +147,38 @@ export class CompanyService {
 
   // Branches
   static async getBranches(): Promise<ApiResponse<BranchDto[]>> {
-    const response = await apiClient.get('/api/Branch');
-    return response.data;
+    console.log('🔍 CompanyService.getBranches: Making API call to /api/Branch');
+    try {
+      const response = await apiClient.get('/api/Branch');
+      console.log('✅ CompanyService.getBranches: API call successful:', response);
+      console.log('🔍 CompanyService.getBranches: Response data:', response.data);
+      console.log('🔍 CompanyService.getBranches: Response.data type:', typeof response.data);
+      console.log('🔍 CompanyService.getBranches: Response.data keys:', Object.keys(response.data || {}));
+      
+      // Backend'ten gelen response formatını kontrol et
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        console.log('🔍 CompanyService.getBranches: Found data.data format, branches count:', response.data.data.length);
+        return {
+          data: response.data.data,
+          isSuccess: !response.data.errorMessage || response.data.errorMessage.length === 0
+        };
+      } else if (Array.isArray(response.data)) {
+        console.log('🔍 CompanyService.getBranches: Found direct array format, branches count:', response.data.length);
+        return {
+          data: response.data,
+          isSuccess: true
+        };
+      } else {
+        console.warn('⚠️ CompanyService.getBranches: Unexpected response format:', response.data);
+        return {
+          data: [],
+          isSuccess: false
+        };
+      }
+    } catch (error) {
+      console.error('❌ CompanyService.getBranches: API call failed:', error);
+      throw error;
+    }
   }
 
   static async getBranchById(id: number): Promise<ApiResponse<BranchDto>> {

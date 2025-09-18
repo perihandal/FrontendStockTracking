@@ -14,7 +14,7 @@ import Typography from '@mui/material/Typography';
 import FormControl from '@mui/material/FormControl';
 
 import { StockService } from 'src/services/api/stock-service';
-import { WarehouseService } from 'src/services/api/warehouse-service';
+import { WarehouseService, type WarehouseDto } from 'src/services/api/warehouse-service';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -44,6 +44,7 @@ type Warehouse = {
   companyName: string;
   branchId: number;
   branchName: string;
+  isActive: boolean;
 };
 
 type StockTransactionFormProps = {
@@ -80,11 +81,29 @@ export function StockTransactionForm({
     queryFn: async () => {
       const result = await WarehouseService.getWarehouses();
       console.log('🔍 Debug - Raw warehouses API response:', result);
-      if (!result.isSuccess) {
-        throw new Error(Array.isArray(result.errorMessage) ? result.errorMessage.join(', ') : result.errorMessage || 'Failed to fetch warehouses');
+      console.log('🔍 Debug - Warehouses response type:', typeof result);
+      console.log('🔍 Debug - Warehouses response keys:', Object.keys(result || {}));
+      
+      // Backend'ten gelen response formatını kontrol et
+      let warehouses: Warehouse[] = [];
+      
+      if (result && result.data && Array.isArray(result.data)) {
+        // ServiceResult formatı: { data: [...], errorMessage: null }
+        console.log('🔍 Debug - Found ServiceResult format, warehouses count:', result.data.length);
+        warehouses = result.data as Warehouse[];
+      } else if (Array.isArray(result)) {
+        // Direkt array formatı
+        console.log('🔍 Debug - Found direct array format, warehouses count:', result.length);
+        warehouses = result as Warehouse[];
+      } else {
+        console.warn('⚠️ Warning - Unexpected warehouses response format:', result);
+        warehouses = [];
       }
-      console.log('🔍 Debug - Warehouses data from API:', result.data);
-      return result.data;
+      
+      console.log('🔍 Debug - Final warehouses data:', warehouses);
+      console.log('🔍 Debug - Final warehouses count:', warehouses.length);
+      
+      return warehouses;
     },
   });
 
@@ -119,23 +138,74 @@ export function StockTransactionForm({
       companyName: selectedStockCardCompanyName
     });
     console.log('🔍 Debug - allWarehouses before filter:', allWarehouses);
+    console.log('🔍 Debug - allWarehouses details:', allWarehouses.map(w => ({
+      id: w.id,
+      name: w.name,
+      companyId: w.companyId,
+      companyName: w.companyName,
+      isActive: w.isActive,
+      isActiveType: typeof w.isActive
+    })));
     
     const filtered = allWarehouses.filter(warehouse => {
       // Önce companyId ile filtrele, yoksa companyName ile filtrele
       let matches = false;
       
       if (selectedStockCardCompanyId && warehouse.companyId) {
-        matches = warehouse.companyId === selectedStockCardCompanyId;
+        // Güvenli karşılaştırma - hem number hem string olabilir
+        matches = Number(warehouse.companyId) === Number(selectedStockCardCompanyId);
       } else if (selectedStockCardCompanyName && warehouse.companyName) {
         matches = warehouse.companyName === selectedStockCardCompanyName;
       }
       
-      console.log(`🔍 Debug - Warehouse ${warehouse.name} (companyId: ${warehouse.companyId}, companyName: ${warehouse.companyName}) matches:`, matches);
-      return matches;
+      // Sadece aktif depoları dahil et
+      const isActive = warehouse.isActive === true;
+      
+      console.log(`🔍 Debug - Warehouse ${warehouse.name} (companyId: ${warehouse.companyId}, companyName: ${warehouse.companyName}, isActive: ${warehouse.isActive}, isActiveType: ${typeof warehouse.isActive}) matches:`, matches && isActive);
+      return matches && isActive;
     });
     
     console.log('🔍 Debug - filtered warehouses after filter:', filtered);
+    
+    // Debug: Aktif olmayan depoları da göster
+    const inactiveWarehouses = allWarehouses.filter(warehouse => {
+      let matches = false;
+      if (selectedStockCardCompanyId && warehouse.companyId) {
+        // Güvenli karşılaştırma - hem number hem string olabilir
+        matches = Number(warehouse.companyId) === Number(selectedStockCardCompanyId);
+      } else if (selectedStockCardCompanyName && warehouse.companyName) {
+        matches = warehouse.companyName === selectedStockCardCompanyName;
+      }
+      // Aktif olmayan depoları filtrele
+      const isInactive = warehouse.isActive === false;
+      return matches && isInactive;
+    });
+    
+    if (inactiveWarehouses.length > 0) {
+      console.log('🔍 Debug - Found inactive warehouses for this company:', inactiveWarehouses);
+    }
+    
     return filtered;
+  }, [selectedStockCardCompanyId, selectedStockCardCompanyName, allWarehouses]);
+
+  // Aktif olmayan depo sayısını hesapla
+  const inactiveWarehouseCount = React.useMemo(() => {
+    if (!selectedStockCardCompanyId && !selectedStockCardCompanyName) {
+      return 0;
+    }
+    
+    return allWarehouses.filter(warehouse => {
+      let matches = false;
+      if (selectedStockCardCompanyId && warehouse.companyId) {
+        // Güvenli karşılaştırma - hem number hem string olabilir
+        matches = Number(warehouse.companyId) === Number(selectedStockCardCompanyId);
+      } else if (selectedStockCardCompanyName && warehouse.companyName) {
+        matches = warehouse.companyName === selectedStockCardCompanyName;
+      }
+      // Aktif olmayan depoları say
+      const isInactive = warehouse.isActive === false;
+      return matches && isInactive;
+    }).length;
   }, [selectedStockCardCompanyId, selectedStockCardCompanyName, allWarehouses]);
 
   useEffect(() => {
@@ -166,10 +236,17 @@ export function StockTransactionForm({
             id: selectedCard.id,
             name: selectedCard.name,
             companyId: selectedCard.companyId,
-            companyName: selectedCard.companyName
+            companyName: selectedCard.companyName,
+            companyIdType: typeof selectedCard.companyId
           });
           console.log('🔍 Debug - setting companyId to:', selectedCard.companyId);
           console.log('🔍 Debug - setting companyName to:', selectedCard.companyName);
+          
+          // CompanyId'nin number olup olmadığını kontrol et
+          if (typeof selectedCard.companyId !== 'number') {
+            console.warn('⚠️ Warning - selectedCard.companyId is not a number:', selectedCard.companyId, typeof selectedCard.companyId);
+          }
+          
           setSelectedStockCardCompanyId(selectedCard.companyId);
           setSelectedStockCardCompanyName(selectedCard.companyName);
           // Depo seçimlerini temizle çünkü yeni şirkete göre filtreleme yapılacak
@@ -367,8 +444,11 @@ export function StockTransactionForm({
                   </Typography>
                 )}
                 {selectedStockCardCompanyId && warehouses.length === 0 && (
-                  <Typography variant="caption" color="info" sx={{ mt: 0.5 }}>
-                    Bu şirkete ait aktif depo bulunamadı
+                  <Typography variant="caption" color="warning.main" sx={{ mt: 0.5 }}>
+                    {inactiveWarehouseCount > 0 
+                      ? `Bu şirkete ait ${inactiveWarehouseCount} adet depo var ancak hiçbiri aktif değil. Lütfen depoları aktif hale getirin.`
+                      : 'Bu şirkete ait aktif depo bulunamadı. Lütfen önce bu şirket için aktif bir depo oluşturun.'
+                    }
                   </Typography>
                 )}
               </FormControl>
@@ -405,8 +485,11 @@ export function StockTransactionForm({
                   </Typography>
                 )}
                 {selectedStockCardCompanyId && warehouses.length === 0 && (
-                  <Typography variant="caption" color="info" sx={{ mt: 0.5 }}>
-                    Bu şirkete ait aktif depo bulunamadı
+                  <Typography variant="caption" color="warning.main" sx={{ mt: 0.5 }}>
+                    {inactiveWarehouseCount > 0 
+                      ? `Bu şirkete ait ${inactiveWarehouseCount} adet depo var ancak hiçbiri aktif değil. Lütfen depoları aktif hale getirin.`
+                      : 'Bu şirkete ait aktif depo bulunamadı. Lütfen önce bu şirket için aktif bir depo oluşturun.'
+                    }
                   </Typography>
                 )}
               </FormControl>
@@ -438,8 +521,11 @@ export function StockTransactionForm({
                   </Typography>
                 )}
                 {selectedStockCardCompanyId && warehouses.length === 0 && (
-                  <Typography variant="caption" color="info" sx={{ mt: 0.5 }}>
-                    Bu şirkete ait aktif depo bulunamadı
+                  <Typography variant="caption" color="warning.main" sx={{ mt: 0.5 }}>
+                    {inactiveWarehouseCount > 0 
+                      ? `Bu şirkete ait ${inactiveWarehouseCount} adet depo var ancak hiçbiri aktif değil. Lütfen depoları aktif hale getirin.`
+                      : 'Bu şirkete ait aktif depo bulunamadı. Lütfen önce bu şirket için aktif bir depo oluşturun.'
+                    }
                   </Typography>
                 )}
               </FormControl>

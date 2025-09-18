@@ -24,6 +24,8 @@ export { default as ReportService } from './report-service';
 export { default as BranchService } from './branch-service';
 // Barcode Service
 export { default as BarcodeService } from './barcode-service';
+// Stock Transaction Service
+export { StockTransactionService } from './stock-transaction-service';
 export type { 
   User, 
   LoginRequest, 
@@ -69,11 +71,8 @@ export type {
   StockCardDto,
   StockCardType, 
   PagedResponse, 
-  TransactionType,
   CreateStockCardRequest,
-  UpdateStockCardRequest,
-  CreateStockTransactionRequest,
-  UpdateStockTransactionRequest
+  UpdateStockCardRequest
 } from './stock-service';
 export type { 
   BarcodeCardDto, 
@@ -82,3 +81,11 @@ export type {
   CreateBarcodeCardResponse
 } from './barcode-service';
 export { BarcodeType, BarcodeTypeLabels } from './barcode-service';
+
+export type { 
+  StockTransactionDto, 
+  CreateStockTransactionRequest, 
+  UpdateStockTransactionRequest,
+  CreateStockTransactionResponse,
+  TransactionType
+} from './stock-transaction-service';

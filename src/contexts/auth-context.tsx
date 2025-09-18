@@ -4,6 +4,7 @@ import type { User, LoginRequest, RegisterRequest, ChangePasswordRequest } from 
 import React, { useState, useEffect, useContext, createContext } from 'react';
 
 import { AuthService } from 'src/services/api';
+import { UserService } from 'src/services/api';
 
 // Context Types
 interface AuthContextType {
@@ -39,9 +40,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const token = localStorage.getItem('accessToken');
         const userStr = localStorage.getItem('user');
         
+        console.log('🔐 Auth check - token exists:', !!token);
+        console.log('🔐 Auth check - user exists:', !!userStr);
+        
         if (token && userStr) {
           const userData = JSON.parse(userStr);
           setUser(userData);
+          console.log('🔐 Auth check - user set:', userData);
+        } else {
+          console.log('🔐 Auth check - no valid auth data found');
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -60,14 +67,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (credentials: LoginRequest): Promise<boolean> => {
     try {
       setIsLoading(true);
+      console.log('🔐 Login attempt with credentials:', credentials);
       const response = await AuthService.login(credentials);
       
+      console.log('🔐 Login response:', response);
+      console.log('🔐 Login response keys:', Object.keys(response));
+      
       if (response.accessToken) {
+        console.log('🔐 Login successful, storing tokens');
         localStorage.setItem('accessToken', response.accessToken);
         localStorage.setItem('refreshToken', response.refreshToken);
         
         // Decode JWT token to get user info (basic implementation)
         const tokenPayload = JSON.parse(atob(response.accessToken.split('.')[1]));
+        
+        console.log('🔐 JWT Token payload:', tokenPayload);
+        console.log('🔐 JWT Token payload keys:', Object.keys(tokenPayload));
+
+        // JWT token'dan user ID'yi al
+        const userId = parseInt(tokenPayload.sub);
+        console.log('🔐 User ID from token:', userId);
+
+        // /users endpoint'inden kullanıcı bilgilerini çek
+        console.log('🔐 Fetching user details from /users endpoint...');
+        const users = await UserService.getUsers();
+        console.log('🔐 All users from API:', users);
+        
+        const currentUser = users.find(u => u.id === userId);
+        console.log('🔐 Current user found:', currentUser);
+
+        if (!currentUser) {
+          console.error('🔐 User not found in /users endpoint');
+          return false;
+        }
 
         // Role bilgisini farklı formatlarda ara
         let userRoles: string[] = [];
@@ -79,19 +111,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         const userData: User = {
-          id: tokenPayload.sub,
-          username: tokenPayload.username,
-          fullName: tokenPayload.fullName,
-          email: tokenPayload.email || '',
-          isActive: true,
+          id: currentUser.id,
+          username: currentUser.username,
+          fullName: currentUser.fullName,
+          email: currentUser.email,
+          isActive: currentUser.isActive,
           createdDate: new Date().toISOString(),
           roles: userRoles
         };
         
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
+        console.log('🔐 Login completed, user set:', userData);
         return true;
       }
+      console.log('🔐 Login failed - no access token');
       return false;
     } catch (error) {
       console.error('Login failed:', error);

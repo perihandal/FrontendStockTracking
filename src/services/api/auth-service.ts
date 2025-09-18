@@ -66,7 +66,7 @@ export class AuthService {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    // Login sayfasına yönlendir
+    // Sign-in sayfasına yönlendir
     window.location.href = '/sign-in';
   }
 

@@ -266,12 +266,12 @@ export function PricesView() {
           >
             <Tab
               label="Fiyat Tanımları"
-              icon={<Iconify icon="solar:tag-price-bold" />}
+              icon={<Iconify icon="solar:pen-bold" />}
               iconPosition="start"
             />
             <Tab
               label="Fiyat Geçmişi"
-              icon={<Iconify icon="solar:history-bold" />}
+              icon={<Iconify icon="solar:restart-bold" />}
               iconPosition="start"
             />
           </Tabs>

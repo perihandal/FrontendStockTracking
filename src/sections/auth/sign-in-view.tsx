@@ -39,7 +39,7 @@ export function SignInView() {
 
     try {
       await login({ username, password });
-      router.push('/stock-cards'); // Stok Kartları sayfasına yönlendir
+      router.push('/dashboard'); // Dashboard'a yönlendir
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login başarısız');
     } finally {

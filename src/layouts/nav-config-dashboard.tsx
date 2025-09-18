@@ -15,17 +15,17 @@ export type NavItem = {
 export const navData = [
   {
     title: 'Dashboard',
-    path: '/',
+    path: '/dashboard',
     icon: icon('ic-analytics'),
   },
   {
     title: 'Stok Kartları',
-    path: '/stock-cards',
+    path: '/dashboard/stock-cards',
     icon: icon('ic-box'),
   },
   {
     title: 'Stok İşlemleri',
-    path: '/stock-transactions',
+    path: '/dashboard/stock-transactions',
     icon: icon('ic-cart'),
     info: (
       <Label color="error" variant="inverted">
@@ -35,42 +35,42 @@ export const navData = [
   },
   {
     title: 'Şirketler',
-    path: '/companies',
+    path: '/dashboard/companies',
     icon: icon('ic-user'),
   },
   {
     title: 'Şubeler',
-    path: '/branches',
+    path: '/dashboard/branches',
     icon: icon('ic-blog'),
   },
   {
     title: 'Depolar',
-    path: '/warehouses',
+    path: '/dashboard/warehouses',
     icon: icon('ic-lock'),
   },
   {
     title: 'Barkodlar',
-    path: '/barcodes',
+    path: '/dashboard/barcodes',
     icon: icon('ic-barcode'),
   },
   {
     title: 'Kategoriler',
-    path: '/categories',
+    path: '/dashboard/categories',
     icon: icon('ic-disabled'),
   },
       {
         title: 'Gruplar',
-        path: '/groups',
+        path: '/dashboard/groups',
         icon: icon('ic-blog'),
       },
       {
         title: 'Fiyat Yönetimi',
-        path: '/prices',
+        path: '/dashboard/prices',
         icon: icon('ic-analytics'),
       },
   {
     title: 'Kullanıcılar',
-    path: '/users',
+    path: '/dashboard/users',
     icon: icon('ic-user'),
   },
 ];
