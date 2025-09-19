@@ -82,31 +82,45 @@ export function StockCardForm({ onSubmit, editMode = false, selected, isLoading 
     queryKey: ['companies'],
     queryFn: async () => {
       try {
-        console.log('🔍 Fetching companies from:', CompanyService.getCompanies);
+        console.log('🔍 StockCardForm - Fetching companies from API...');
+        console.log('🔍 StockCardForm - Current user:', user);
+        console.log('🔍 StockCardForm - Is Admin User:', isAdminUser);
+        
         const result = await CompanyService.getCompanies();
-        console.log('✅ Companies API result:', result);
-        console.log('✅ Companies data:', result?.data);
-        console.log('✅ Companies success:', result?.isSuccess);
+        console.log('✅ StockCardForm - Companies API result:', result);
+        console.log('✅ StockCardForm - Companies data:', result?.data);
+        console.log('✅ StockCardForm - Companies success:', result?.isSuccess);
         
         if (!result?.isSuccess) {
-          console.error('❌ Companies API returned success: false');
-          console.error('❌ Companies API message:', result?.errorMessage);
+          console.error('❌ StockCardForm - Companies API returned success: false');
+          console.error('❌ StockCardForm - Companies API message:', result?.errorMessage);
         }
         
         // Role-based filtering
         let companiesData = result?.data || [];
+        console.log('🔍 StockCardForm - Original companies data:', companiesData);
+        console.log('🔍 StockCardForm - Original companies count:', companiesData.length);
+        
         if (!isAdminUser && user) {
           const userCompanyId = getCompanyId();
+          console.log('🔍 StockCardForm - Editor user company ID from token:', userCompanyId);
+          
           if (userCompanyId) {
-            companiesData = companiesData.filter((company: any) => company.id === userCompanyId);
-            console.log('🔍 Stock Card Form - Filtered companies for Editor:', companiesData);
+            const filteredCompanies = companiesData.filter((company: any) => company.id === userCompanyId);
+            console.log('🔍 StockCardForm - Filtered companies for Editor:', filteredCompanies);
+            console.log('🔍 StockCardForm - Filtered companies count:', filteredCompanies.length);
+            companiesData = filteredCompanies;
+          } else {
+            console.warn('⚠️ StockCardForm - Editor user has no company ID in token');
           }
         }
         
-        return { ...result, data: companiesData };
+        const finalResult = { ...result, data: companiesData };
+        console.log('✅ StockCardForm - Final companies result:', finalResult);
+        return finalResult;
       } catch (error) {
-        console.error('❌ Companies API error:', error);
-        console.error('❌ Companies API error details:', {
+        console.error('❌ StockCardForm - Companies API error:', error);
+        console.error('❌ StockCardForm - Companies API error details:', {
           message: (error as any).message,
           response: (error as any).response,
           request: (error as any).request
@@ -194,12 +208,32 @@ export function StockCardForm({ onSubmit, editMode = false, selected, isLoading 
 
   // Auto-select company for Editor users
   useEffect(() => {
-    if (!isAdminUser && user && companiesResponse?.data?.length > 0) {
+    console.log('🔍 StockCardForm - Auto-select company effect triggered');
+    console.log('🔍 StockCardForm - isAdminUser:', isAdminUser);
+    console.log('🔍 StockCardForm - user:', user);
+    console.log('🔍 StockCardForm - companiesResponse:', companiesResponse);
+    console.log('🔍 StockCardForm - companiesResponse?.data:', companiesResponse?.data);
+    console.log('🔍 StockCardForm - companiesResponse?.data?.length:', companiesResponse?.data?.length);
+    console.log('🔍 StockCardForm - formData.companyId:', formData.companyId);
+    
+    if (!isAdminUser && user && companiesResponse?.data?.length && companiesResponse.data.length > 0) {
       const userCompanyId = getCompanyId();
+      console.log('🔍 StockCardForm - userCompanyId from token:', userCompanyId);
+      
       if (userCompanyId && formData.companyId === undefined) {
+        console.log('✅ StockCardForm - Auto-selecting company for Editor:', userCompanyId);
         setFormData(prev => ({ ...prev, companyId: userCompanyId }));
-        console.log('🔍 Stock Card Form - Auto-selected company for Editor:', userCompanyId);
+      } else {
+        console.log('⚠️ StockCardForm - Not auto-selecting company:', { userCompanyId, 'formData.companyId': formData.companyId });
       }
+    } else {
+      console.log('⚠️ StockCardForm - Auto-select conditions not met:', {
+        isAdminUser,
+        hasUser: !!user,
+        hasCompaniesData: !!companiesResponse?.data,
+        companiesDataLength: companiesResponse?.data?.length,
+        formDataCompanyId: formData.companyId
+      });
     }
   }, [isAdminUser, user, companiesResponse, getCompanyId, formData.companyId]);
 

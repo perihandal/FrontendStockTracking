@@ -128,7 +128,7 @@ export function WarehouseForm({
       } else {
         const userBranchId = getBranchId();
         console.log('👤 WarehouseForm: Regular user - filtering to branch:', userBranchId);
-        const filteredData = result.data.filter(branch => branch.id === userBranchId);
+        const filteredData = result.data ? result.data.filter(branch => branch.id === userBranchId) : [];
         return { ...result, data: filteredData };
       }
     },

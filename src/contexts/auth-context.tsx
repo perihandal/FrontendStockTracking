@@ -189,13 +189,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isRegularUser = hasRole('User');
 
   const getCompanyId = (): number | null => {
-    if (!user) return null;
+    console.log('🔍 AuthContext.getCompanyId - Called');
+    
+    if (!user) {
+      console.log('⚠️ AuthContext.getCompanyId - No user found');
+      return null;
+    }
+    
     const token = localStorage.getItem('accessToken');
-    if (!token) return null;
+    if (!token) {
+      console.log('⚠️ AuthContext.getCompanyId - No access token found');
+      return null;
+    }
+    
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.companyId ? parseInt(payload.companyId) : null;
-    } catch {
+      console.log('🔍 AuthContext.getCompanyId - JWT payload:', payload);
+      console.log('🔍 AuthContext.getCompanyId - payload.companyId:', payload.companyId);
+      
+      const companyId = payload.companyId ? parseInt(payload.companyId) : null;
+      console.log('🔍 AuthContext.getCompanyId - Parsed company ID:', companyId);
+      
+      return companyId;
+    } catch (error) {
+      console.error('❌ AuthContext.getCompanyId - Error parsing token:', error);
       return null;
     }
   };
