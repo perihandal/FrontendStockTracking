@@ -25,6 +25,7 @@ import Tab from '@mui/material/Tab';
 
 import { Iconify } from 'src/components/iconify';
 import { CategoryService, UserService } from 'src/services/api';
+import { useAuthContext } from 'src/contexts/auth-context';
 import { MainGroupForm } from '../main-group-form';
 import { SubGroupForm } from '../sub-group-form';
 import { MainGroupsTableRow } from '../main-groups-table-row';
@@ -57,6 +58,8 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export function GroupsView() {
+  const { isAdminUser, isEditorUser, getCompanyId, getBranchId } = useAuthContext();
+  
   const [tabValue, setTabValue] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -85,6 +88,7 @@ export function GroupsView() {
 
   const loadMainGroups = async () => {
     console.log('🔄 Loading main groups...');
+    console.log('🔐 Auth context - isAdminUser:', isAdminUser, 'isEditorUser:', isEditorUser, 'companyId:', getCompanyId(), 'branchId:', getBranchId());
     setLoading(true);
     try {
       const response = await CategoryService.getMainGroups();
@@ -93,23 +97,19 @@ export function GroupsView() {
       if (response.data && Array.isArray(response.data)) {
         console.log('✅ Main groups loaded successfully:', response.data.length, 'items');
         
-        // Users'ları çek
-        const users = await UserService.getUsers();
-        console.log('👥 Users loaded:', users.length, 'users');
-        
         // Backend'den gelen veriyi frontend formatına çevir
         const formattedMainGroups: MainGroup[] = response.data.map((item: any) => {
-          const user = users.find(u => u.id === item.userId);
           return {
             id: item.id,
             code: item.code,
             name: item.name,
             isActive: item.isActive,
             userId: item.userId || 1,
-            userName: user?.fullName || user?.username || 'Bilinmeyen Kullanıcı',
+            userName: '', // Artık kullanılmıyor
           };
         });
         setMainGroups(formattedMainGroups);
+        console.log('🎯 Formatted main groups set:', formattedMainGroups.length, 'items');
       } else if (response.errorMessage) {
         console.log('❌ Main groups load error:', response.errorMessage);
         setSnackbar({
@@ -127,9 +127,15 @@ export function GroupsView() {
       }
     } catch (error: any) {
       console.error('❌ Error loading main groups:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data
+      });
       setSnackbar({
         open: true,
-        message: 'Ana gruplar yüklenirken hata oluştu',
+        message: `Ana gruplar yüklenirken hata oluştu: ${error.message}`,
         severity: 'error',
       });
     } finally {
@@ -142,42 +148,53 @@ export function GroupsView() {
     console.log('🔄 Loading sub groups...');
     setLoading(true);
     try {
-      const response = await CategoryService.getSubGroups();
-      console.log('📋 Sub groups response:', response);
+      const [subGroupsResponse, mainGroupsResponse] = await Promise.all([
+        CategoryService.getSubGroups(),
+        CategoryService.getMainGroups()
+      ]);
       
-      if (response.data && Array.isArray(response.data)) {
-        console.log('✅ Sub groups loaded successfully:', response.data.length, 'items');
+      console.log('📋 Sub groups response:', subGroupsResponse);
+      console.log('📋 Main groups response:', mainGroupsResponse);
+      
+      if (subGroupsResponse.data && Array.isArray(subGroupsResponse.data)) {
+        console.log('✅ Sub groups loaded successfully:', subGroupsResponse.data.length, 'items');
+        console.log('🔍 First sub group raw data:', subGroupsResponse.data[0]);
+        console.log('🔍 Sub group available fields:', Object.keys(subGroupsResponse.data[0] || {}));
         
-        // Users ve Main Groups'ları çek
-        const [users, mainGroups] = await Promise.all([
-          UserService.getUsers(),
-          CategoryService.getMainGroups()
-        ]);
-        
-        console.log('👥 Users loaded:', users.length, 'users');
-        console.log('📁 Main groups loaded:', mainGroups.data?.length || 0, 'main groups');
+        const mainGroupsData = mainGroupsResponse.data || [];
+        console.log('📁 Main groups for mapping:', mainGroupsData.length, 'items');
         
         // Backend'den gelen veriyi frontend formatına çevir
-        const formattedSubGroups: SubGroup[] = response.data.map((item: any) => {
-          const user = users.find(u => u.id === item.userId);
-          const mainGroup = mainGroups.data?.find(mg => mg.id === item.mainGroupId);
+        const formattedSubGroups: SubGroup[] = subGroupsResponse.data.map((item: any) => {
+          console.log('🔍 Sub group item:', item);
+          console.log('🔍 mainGroupName field:', item.mainGroupName);
+          console.log('🔍 mainGroup field:', item.mainGroup);
+          console.log('🔍 mainGroupId field:', item.mainGroupId);
+          
+          // Ana grup adını bul
+          const mainGroup = mainGroupsData.find((mg: any) => mg.id === item.mainGroupId);
+          const mainGroupName = item.mainGroupName || mainGroup?.name || 'Bilinmeyen Ana Grup';
+          
+          console.log('🔍 Found main group:', mainGroup);
+          console.log('🔍 Final mainGroupName:', mainGroupName);
+          
           return {
             id: item.id,
             code: item.code,
             name: item.name,
             isActive: item.isActive,
             userId: item.userId || 1,
-            userName: user?.fullName || user?.username || 'Bilinmeyen Kullanıcı',
+            userName: '', // Artık kullanılmıyor
             mainGroupId: item.mainGroupId,
-            mainGroupName: mainGroup?.name || 'Bilinmeyen Ana Grup',
+            mainGroupName: mainGroupName,
           };
         });
         setSubGroups(formattedSubGroups);
-      } else if (response.errorMessage) {
-        console.log('❌ Sub groups load error:', response.errorMessage);
+      } else if (subGroupsResponse.errorMessage) {
+        console.log('❌ Sub groups load error:', subGroupsResponse.errorMessage);
         setSnackbar({
           open: true,
-          message: response.errorMessage,
+          message: subGroupsResponse.errorMessage,
           severity: 'error',
         });
       } else {
@@ -406,7 +423,6 @@ export function GroupsView() {
                 <TableRow>
                   <TableCell>Ana Grup Kodu</TableCell>
                   <TableCell>Ana Grup Adı</TableCell>
-                  <TableCell>Oluşturan</TableCell>
                   <TableCell>Durum</TableCell>
                   <TableCell>İşlemler</TableCell>
                 </TableRow>
@@ -420,7 +436,7 @@ export function GroupsView() {
                   </TableRow>
                 ) : filteredMainGroups.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={4}>
                       <TableNoData query={filterName} />
                     </TableCell>
                   </TableRow>
@@ -469,7 +485,6 @@ export function GroupsView() {
                   <TableCell>Alt Grup Kodu</TableCell>
                   <TableCell>Alt Grup Adı</TableCell>
                   <TableCell>Ana Grup</TableCell>
-                  <TableCell>Oluşturan</TableCell>
                   <TableCell>Durum</TableCell>
                   <TableCell>İşlemler</TableCell>
                 </TableRow>
@@ -483,7 +498,7 @@ export function GroupsView() {
                   </TableRow>
                 ) : filteredSubGroups.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6}>
+                    <TableCell colSpan={5}>
                       <TableNoData query={filterName} />
                     </TableCell>
                   </TableRow>
@@ -542,10 +557,6 @@ export function GroupsView() {
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ flex: '1 1 45%' }}>
-                  <Typography variant="subtitle2" color="text.secondary">Oluşturan</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedMainGroup.userName}</Typography>
-                </Box>
-                <Box sx={{ flex: '1 1 45%' }}>
                   <Typography variant="subtitle2" color="text.secondary">Durum</Typography>
                   <Chip
                     label={selectedMainGroup.isActive ? 'Aktif' : 'Pasif'}
@@ -574,17 +585,13 @@ export function GroupsView() {
                   <Typography variant="body1" sx={{ mb: 2 }}>{selectedSubGroup.mainGroupName}</Typography>
                 </Box>
                 <Box sx={{ flex: '1 1 45%' }}>
-                  <Typography variant="subtitle2" color="text.secondary">Oluşturan</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedSubGroup.userName}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary">Durum</Typography>
+                  <Chip
+                    label={selectedSubGroup.isActive ? 'Aktif' : 'Pasif'}
+                    color={selectedSubGroup.isActive ? 'success' : 'error'}
+                    size="small"
+                  />
                 </Box>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">Durum</Typography>
-                <Chip
-                  label={selectedSubGroup.isActive ? 'Aktif' : 'Pasif'}
-                  color={selectedSubGroup.isActive ? 'success' : 'error'}
-                  size="small"
-                />
               </Box>
             </Box>
           )}

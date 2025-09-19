@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { Iconify } from 'src/components/iconify';
+import { CanEdit, CanDelete } from 'src/components/permission';
 import type { MainGroup } from './groups.types';
 
 export interface MainGroupsTableRowProps {
@@ -23,11 +24,6 @@ export function MainGroupsTableRow({ mainGroup, onView, onEdit, onDelete }: Main
     <TableRow hover>
       <TableCell>{mainGroup.code}</TableCell>
       <TableCell>{mainGroup.name}</TableCell>
-      <TableCell>
-        <Typography variant="body2">
-          {mainGroup.userName}
-        </Typography>
-      </TableCell>
       <TableCell>
         <Chip
           label={mainGroup.isActive ? 'Aktif' : 'Pasif'}
@@ -45,20 +41,24 @@ export function MainGroupsTableRow({ mainGroup, onView, onEdit, onDelete }: Main
           >
             <Iconify icon="solar:eye-bold" />
           </IconButton>
-          <IconButton
-            size="small"
-            color="info"
-            onClick={() => onEdit(mainGroup)}
-          >
-            <Iconify icon="solar:pen-bold" />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => onDelete(mainGroup)}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-          </IconButton>
+          <CanEdit>
+            <IconButton
+              size="small"
+              color="info"
+              onClick={() => onEdit(mainGroup)}
+            >
+              <Iconify icon="solar:pen-bold" />
+            </IconButton>
+          </CanEdit>
+          <CanDelete>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => onDelete(mainGroup)}
+            >
+              <Iconify icon="solar:trash-bin-trash-bold" />
+            </IconButton>
+          </CanDelete>
         </Stack>
       </TableCell>
     </TableRow>

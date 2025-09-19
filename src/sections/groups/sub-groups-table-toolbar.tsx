@@ -6,6 +6,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Box from '@mui/material/Box';
 
 import { Iconify } from 'src/components/iconify';
+import { CanCreate } from 'src/components/permission';
 
 export interface SubGroupsTableToolbarProps {
   filterName: string;
@@ -37,13 +38,15 @@ export function SubGroupsTableToolbar({ filterName, onFilterName, onCreateClick 
         }}
         sx={{ maxWidth: 300 }}
       />
-      <Button
-        variant="contained"
-        startIcon={<Iconify icon="mingcute:add-line" />}
-        onClick={onCreateClick}
-      >
-        Yeni Alt Grup
-      </Button>
+      <CanCreate>
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={onCreateClick}
+        >
+          Yeni Alt Grup
+        </Button>
+      </CanCreate>
     </Box>
   );
 }

@@ -17,7 +17,8 @@ import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { Iconify } from 'src/components/iconify';
-import { CategoryService, UserService } from 'src/services/api';
+import { CategoryService } from 'src/services/api';
+import { useAuthContext } from 'src/contexts/auth-context';
 import type { SubGroupFormProps, CreateSubGroupFormData, UpdateSubGroupFormData, MainGroup } from './groups.types';
 
 // Form data interface
@@ -57,6 +58,7 @@ const validateForm = (data: SubGroupFormData): string[] => {
 };
 
 export function SubGroupForm({ open, onClose, onSuccess, subGroup, isEdit = false }: SubGroupFormProps) {
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mainGroups, setMainGroups] = useState<MainGroup[]>([]);
@@ -101,31 +103,44 @@ export function SubGroupForm({ open, onClose, onSuccess, subGroup, isEdit = fals
 
   const loadMainGroups = async () => {
     setLoadingMainGroups(true);
+    setError(null);
+    
     try {
+      console.log('🔄 Loading main groups...');
       const response = await CategoryService.getMainGroups();
+      console.log('📋 Main groups response:', response);
+      
       if (response.data && !response.errorMessage) {
-        // Users'ları da çek
-        const users = await UserService.getUsers();
-        
         // Backend'den gelen veriyi frontend formatına çevir
-        const formattedMainGroups: MainGroup[] = response.data.map((item: any) => {
-          const user = users.find(u => u.id === item.userId);
-          return {
-            id: item.id,
-            code: item.code,
-            name: item.name,
-            isActive: item.isActive,
-            userId: item.userId || 1,
-            userName: user?.fullName || user?.username || 'Bilinmeyen Kullanıcı',
-          };
-        });
+        const formattedMainGroups: MainGroup[] = response.data.map((item: any) => ({
+          id: item.id,
+          code: item.code,
+          name: item.name,
+          isActive: item.isActive,
+          userId: item.userId || 1,
+          userName: user?.fullName || 'Sistem Kullanıcısı',
+        }));
+        
+        console.log('✅ Formatted main groups:', formattedMainGroups);
         setMainGroups(formattedMainGroups);
       } else {
-        setError(Array.isArray(response.errorMessage) ? response.errorMessage.join(', ') : response.errorMessage || 'Ana gruplar yüklenirken hata oluştu');
+        const errorMsg = Array.isArray(response.errorMessage) 
+          ? response.errorMessage.join(', ') 
+          : response.errorMessage || 'Ana gruplar yüklenirken hata oluştu';
+        
+        console.log('❌ Main groups error:', errorMsg);
+        setError(errorMsg);
       }
-    } catch (err) {
-      console.error('Error loading main groups:', err);
-      setError('Ana gruplar yüklenirken hata oluştu');
+    } catch (err: any) {
+      console.error('❌ Error loading main groups:', err);
+      console.error('❌ Error response:', err.response);
+      
+      const errorMessage = err.response?.data?.errorMessage || 
+                          err.response?.data?.message || 
+                          err.message || 
+                          'Ana gruplar yüklenirken hata oluştu';
+      
+      setError(errorMessage);
     } finally {
       setLoadingMainGroups(false);
     }
@@ -153,7 +168,7 @@ export function SubGroupForm({ open, onClose, onSuccess, subGroup, isEdit = fals
     setError(null);
 
     try {
-      const userId = parseInt(localStorage.getItem('userId') || '1', 10);
+      const userId = user?.id || parseInt(localStorage.getItem('userId') || '1', 10);
       const token = localStorage.getItem('accessToken');
       
       console.log('🔑 User ID:', userId);
@@ -297,11 +312,22 @@ export function SubGroupForm({ open, onClose, onSuccess, subGroup, isEdit = fals
                 value={formData.mainGroupId > 0 ? formData.mainGroupId : ''}
                 onChange={(e) => handleInputChange('mainGroupId', e.target.value as number)}
               >
-                {mainGroups.map((mainGroup) => (
-                  <MenuItem key={mainGroup.id} value={mainGroup.id}>
-                    {mainGroup.name}
+                {loadingMainGroups ? (
+                  <MenuItem disabled>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={16} />
+                      Ana gruplar yükleniyor...
+                    </Box>
                   </MenuItem>
-                ))}
+                ) : mainGroups.length === 0 ? (
+                  <MenuItem disabled>Ana grup bulunamadı</MenuItem>
+                ) : (
+                  mainGroups.map((mainGroup) => (
+                    <MenuItem key={mainGroup.id} value={mainGroup.id}>
+                      {mainGroup.name}
+                    </MenuItem>
+                  ))
+                )}
               </Select>
             </FormControl>
 

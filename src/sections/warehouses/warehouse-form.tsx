@@ -280,7 +280,7 @@ export function WarehouseForm({
                 value={formData.companyId}
                 onChange={(e) => handleInputChange('companyId', Number(e.target.value))}
                 label="Şirket"
-                disabled={companiesLoading || (isEditorUser && companies.length === 1)}
+                disabled={companiesLoading}
               >
                 {companiesLoading ? (
                   <MenuItem disabled>Şirketler yükleniyor...</MenuItem>
