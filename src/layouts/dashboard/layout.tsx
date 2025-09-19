@@ -13,7 +13,7 @@ import { NavMobile, NavDesktop } from './nav';
 import { layoutClasses } from '../core/classes';
 import { _account } from '../nav-config-account';
 import { dashboardLayoutVars } from './css-vars';
-import { navData } from '../nav-config-dashboard';
+import { useNavData } from '../nav-config-dashboard';
 import { MainSection } from '../core/main-section';
 import { Searchbar } from '../components/searchbar';
 import { _workspaces } from '../nav-config-workspace';
@@ -48,6 +48,7 @@ export function DashboardLayout({
   layoutQuery = 'lg',
 }: DashboardLayoutProps) {
   const theme = useTheme();
+  const navData = useNavData(); // Role-based nav data
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 

@@ -11,6 +11,13 @@ export interface LoginResponse {
   expiresAtUtc: string;
   refreshToken: string;
   refreshExpiresAtUtc: string;
+  user: {
+    id: number;
+    username: string;
+    fullName: string;
+    email: string;
+    isActive: boolean;
+  };
 }
 
 export interface RegisterRequest {

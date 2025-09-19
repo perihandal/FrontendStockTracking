@@ -15,6 +15,7 @@ import { _posts, _tasks, _traffic, _timeline } from 'src/_mock';
 import { Iconify } from 'src/components/iconify';
 import { useAuth } from 'src/contexts/auth-context';
 import { useRouter } from 'src/routes/hooks';
+import { AdminOnly, CanCreate } from 'src/components/permission';
 
 import { CompanyService, StockService, StockTransactionService, WarehouseService } from 'src/services/api';
 
@@ -31,7 +32,7 @@ import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 // ----------------------------------------------------------------------
 
 export function OverviewAnalyticsView() {
-  const { user } = useAuth();
+  const { user, isAdminUser } = useAuth();
   const router = useRouter();
 
   // Gerçek verileri çek
@@ -164,7 +165,8 @@ export function OverviewAnalyticsView() {
             </Typography>
 
             <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary' }}>
-              Stok Takip ve Yönetim Sistemi Dashboard&apos;una hoş geldiniz. Sisteminizi yönetmek için aşağıdaki seçenekleri kullanabilirsiniz.
+              Stok Takip ve Yönetim Sistemi Dashboard&apos;una hoş geldiniz. 
+              {isAdminUser ? ' Tüm sistemi yönetebilirsiniz.' : ' Yetkili olduğunuz alanları kullanabilirsiniz.'}
             </Typography>
 
       <Grid container spacing={3}>
@@ -222,7 +224,7 @@ export function OverviewAnalyticsView() {
           </Grid>
         ))}
 
-        {/* İstatistik Kartları */}
+        {/* Sistem İstatistikleri - Sadece Admin için full istatistik */}
         <Grid size={{ xs: 12 }}>
           <Typography variant="h6" sx={{ mb: 2, mt: 4 }}>
             Sistem İstatistikleri
@@ -252,7 +254,7 @@ export function OverviewAnalyticsView() {
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <AnalyticsWidgetSummary
-                title="Aktif Depo"
+                title={isAdminUser ? "Aktif Depo" : "Erişilebilir Depo"}
                 percent={activeWarehouses > 0 ? 8.2 : 0}
                 total={activeWarehouses}
                 color="secondary"
@@ -278,19 +280,21 @@ export function OverviewAnalyticsView() {
               />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <AnalyticsWidgetSummary
-                title="Toplam Şirket"
-                percent={totalCompanies > 0 ? 5.4 : 0}
-                total={totalCompanies}
-                color="error"
-                icon={<Iconify icon="solar:bell-bing-bold-duotone" sx={{ fontSize: 32 }} />}
-                chart={{
-                  categories: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz'],
-                  series: [56, 30, 23, 54, 47, 40],
-                }}
-              />
-            </Grid>
+            <AdminOnly>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <AnalyticsWidgetSummary
+                  title="Toplam Şirket"
+                  percent={totalCompanies > 0 ? 5.4 : 0}
+                  total={totalCompanies}
+                  color="error"
+                  icon={<Iconify icon="solar:bell-bing-bold-duotone" sx={{ fontSize: 32 }} />}
+                  chart={{
+                    categories: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz'],
+                    series: [56, 30, 23, 54, 47, 40],
+                  }}
+                />
+              </Grid>
+            </AdminOnly>
           </>
         )}
 

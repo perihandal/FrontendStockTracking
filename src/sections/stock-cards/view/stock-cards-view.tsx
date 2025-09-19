@@ -28,6 +28,7 @@ import { StockService } from 'src/services/api';
 import { useAuth } from 'src/contexts/auth-context';
 
 import { Iconify } from 'src/components/iconify';
+import { CanCreate } from 'src/components/permission';
 
 import { StockCardForm } from '../stock-card-form';
 import { StockCardsTableRow } from '../stock-cards-table-row';
@@ -159,7 +160,7 @@ export function StockCardsView() {
         tax: data.tax,
         isActive: true, // Default to active
         companyId: data.companyId,
-        // userId: Number(user.id), // Convert to number - removed as it doesn't exist in UpdateStockCardRequest
+        userId: Number(user.id), // Backend requirement
         branchId: data.branchId,
         mainGroupId: data.mainGroupId,
         subGroupId: data.subGroupId,
@@ -222,11 +223,11 @@ export function StockCardsView() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Stok Kartları</Typography>
-        {isEditor() && (
+        <CanCreate>
           <Button variant="contained" startIcon={<Iconify icon="mingcute:add-line" />} onClick={handleOpenForm}>
             Yeni Stok Kartı
           </Button>
-        )}
+        </CanCreate>
       </Box>
       
       <Card>

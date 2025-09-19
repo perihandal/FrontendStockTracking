@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import { mapEnumToStockCardType } from 'src/utils/stock-card-utils';
 
 import { Iconify } from 'src/components/iconify';
+import { CanEdit, CanDelete } from 'src/components/permission';
 
 type StockCardsTableRowProps = {
   stockCard: StockCardDto;
@@ -66,24 +67,28 @@ export function StockCardsTableRow({
             <Iconify icon="solar:eye-bold" />
           </IconButton>
           {onEdit && (
-            <IconButton 
-              size="small" 
-              color="info"
-              onClick={() => onEdit(stockCard)}
-              title="Düzenle"
-            >
-              <Iconify icon="solar:pen-bold" />
-            </IconButton>
+            <CanEdit>
+              <IconButton 
+                size="small" 
+                color="info"
+                onClick={() => onEdit(stockCard)}
+                title="Düzenle"
+              >
+                <Iconify icon="solar:pen-bold" />
+              </IconButton>
+            </CanEdit>
           )}
           {onDelete && (
-            <IconButton 
-              size="small" 
-              color="error"
-              onClick={() => onDelete(stockCard)}
-              title="Sil"
-            >
-              <Iconify icon="solar:trash-bin-trash-bold" />
-            </IconButton>
+            <CanDelete>
+              <IconButton 
+                size="small" 
+                color="error"
+                onClick={() => onDelete(stockCard)}
+                title="Sil"
+              >
+                <Iconify icon="solar:trash-bin-trash-bold" />
+              </IconButton>
+            </CanDelete>
           )}
         </Stack>
       </TableCell>

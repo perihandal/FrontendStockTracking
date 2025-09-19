@@ -30,6 +30,7 @@ import { useAuth } from 'src/contexts/auth-context';
 import { CompanyService, type CompanyDto, type CreateCompanyRequest, type UpdateCompanyRequest } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
+import { CanCreate } from 'src/components/permission';
 
 import { CompanyForm } from '../company-form';
 
@@ -258,13 +259,15 @@ export function CompaniesView() {
         <Typography variant="h4">
           Şirketler
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={handleNewCompany}
-        >
-          Yeni Şirket
-        </Button>
+        <CanCreate>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={handleNewCompany}
+          >
+            Yeni Şirket
+          </Button>
+        </CanCreate>
       </Box>
 
       <Card>

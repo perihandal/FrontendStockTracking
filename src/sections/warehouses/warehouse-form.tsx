@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { CompanyService, BranchService } from 'src/services/api';
+import { useAuthContext } from 'src/contexts/auth-context';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -68,6 +69,8 @@ export function WarehouseForm({
   isEditMode = false, 
   initialData 
 }: WarehouseFormProps) {
+  const { isAdminUser, isEditorUser, getCompanyId, getBranchId } = useAuthContext();
+  
   const [formData, setFormData] = useState<WarehouseFormData>({
     code: '',
     name: '',
@@ -81,24 +84,53 @@ export function WarehouseForm({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [availableBranches, setAvailableBranches] = useState<BranchDto[]>([]);
 
-  // API Queries
+  // API Queries with role-based filtering
   const { data: companiesResult, isLoading: companiesLoading } = useQuery({
-    queryKey: ['companies'],
+    queryKey: ['companies', isAdminUser ? 'all' : getCompanyId()],
     queryFn: async () => {
       console.log('🔍 WarehouseForm: Fetching companies from API');
       const result = await CompanyService.getCompanies();
       console.log('📊 WarehouseForm: Companies API response:', result);
-      return result;
+      
+      // Filter companies based on user role
+      if (isAdminUser) {
+        console.log('👑 WarehouseForm: Admin user - showing all companies');
+        return result;
+      } else if (isEditorUser) {
+        const userCompanyId = getCompanyId();
+        console.log('✏️ WarehouseForm: Editor user - filtering to company:', userCompanyId);
+        const filteredData = result.data.filter(company => company.id === userCompanyId);
+        return { ...result, data: filteredData };
+      }
+      
+      // Regular users should not see companies in warehouse form typically
+      console.log('👤 WarehouseForm: Regular user - no companies available');
+      return { ...result, data: [] };
     },
   });
 
   const { data: branchesResult, isLoading: branchesLoading } = useQuery({
-    queryKey: ['branches'],
+    queryKey: ['branches', isAdminUser ? 'all' : getBranchId()],
     queryFn: async () => {
       console.log('🔍 WarehouseForm: Fetching branches from API');
       const result = await BranchService.getBranches();
       console.log('📊 WarehouseForm: Branches API response:', result);
-      return result;
+      
+      // Filter branches based on user role
+      if (isAdminUser) {
+        console.log('👑 WarehouseForm: Admin user - showing all branches');
+        return result;
+      } else if (isEditorUser) {
+        const userCompanyId = getCompanyId();
+        console.log('✏️ WarehouseForm: Editor user - filtering to company branches:', userCompanyId);
+        const filteredData = result.data.filter(branch => branch.companyId === userCompanyId);
+        return { ...result, data: filteredData };
+      } else {
+        const userBranchId = getBranchId();
+        console.log('👤 WarehouseForm: Regular user - filtering to branch:', userBranchId);
+        const filteredData = result.data.filter(branch => branch.id === userBranchId);
+        return { ...result, data: filteredData };
+      }
     },
   });
 
@@ -110,6 +142,17 @@ export function WarehouseForm({
       setFormData(initialData);
     }
   }, [initialData]);
+
+  // Auto-select company and branch for Editor users
+  useEffect(() => {
+    if (isEditorUser && companies.length > 0 && !formData.companyId) {
+      const userCompanyId = getCompanyId();
+      if (userCompanyId && companies.find(c => c.id === userCompanyId)) {
+        console.log('✏️ WarehouseForm: Auto-selecting company for Editor user:', userCompanyId);
+        setFormData(prev => ({ ...prev, companyId: userCompanyId }));
+      }
+    }
+  }, [isEditorUser, companies, formData.companyId, getCompanyId]);
 
   useEffect(() => {
     // Şirket seçildiğinde o şirkete ait şubeleri filtrele
@@ -237,7 +280,7 @@ export function WarehouseForm({
                 value={formData.companyId}
                 onChange={(e) => handleInputChange('companyId', Number(e.target.value))}
                 label="Şirket"
-                disabled={companiesLoading}
+                disabled={companiesLoading || (isEditorUser && companies.length === 1)}
               >
                 {companiesLoading ? (
                   <MenuItem disabled>Şirketler yükleniyor...</MenuItem>

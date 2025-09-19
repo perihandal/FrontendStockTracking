@@ -28,6 +28,7 @@ import { useAuth } from 'src/contexts/auth-context';
 import { BranchService, type BranchDtoType, type CreateBranchRequestType, type UpdateBranchRequestType } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
+import { CanCreate } from 'src/components/permission';
 
 import { BranchForm } from '../branch-form';
 import { BranchesTableRow } from '../branchs-table-row';
@@ -255,9 +256,11 @@ export function BranchesView() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Şubeler</Typography>
-        <Button variant="contained" startIcon={<Iconify icon="mingcute:add-line" />} onClick={handleNewBranch}>
-          Yeni Şube
-        </Button>
+        <CanCreate>
+          <Button variant="contained" startIcon={<Iconify icon="mingcute:add-line" />} onClick={handleNewBranch}>
+            Yeni Şube
+          </Button>
+        </CanCreate>
       </Box>
 
       <Card>

@@ -18,6 +18,16 @@ interface AuthContextType {
   hasRole: (role: string) => boolean;
   isAdmin: () => boolean;
   isEditor: () => boolean;
+  // Helper functions
+  isAdminUser: boolean;
+  isEditorUser: boolean;
+  isRegularUser: boolean;
+  getCompanyId: () => number | null;
+  getBranchId: () => number | null;
+  canCreate: () => boolean;
+  canEdit: () => boolean;
+  canDelete: () => boolean;
+  canViewAll: () => boolean;
 }
 
 // Create Context
@@ -88,16 +98,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userId = parseInt(tokenPayload.sub);
         console.log('🔐 User ID from token:', userId);
 
-        // /users endpoint'inden kullanıcı bilgilerini çek
-        console.log('🔐 Fetching user details from /users endpoint...');
-        const users = await UserService.getUsers();
-        console.log('🔐 All users from API:', users);
-        
-        const currentUser = users.find(u => u.id === userId);
-        console.log('🔐 Current user found:', currentUser);
+        // Login response'ından user bilgisini al (users endpoint'ine gitmeye gerek yok)
+        console.log('🔐 Using user data from login response...');
+        const currentUser = response.user;
+        console.log('🔐 Current user from response:', currentUser);
 
         if (!currentUser) {
-          console.error('🔐 User not found in /users endpoint');
+          console.error('🔐 User not found in login response');
           return false;
         }
 
@@ -176,6 +183,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isEditor = (): boolean => hasRole('Editor') || hasRole('Admin');
 
+  // Helper properties and functions
+  const isAdminUser = hasRole('Admin');
+  const isEditorUser = hasRole('Editor');
+  const isRegularUser = hasRole('User');
+
+  const getCompanyId = (): number | null => {
+    if (!user) return null;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.companyId ? parseInt(payload.companyId) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const getBranchId = (): number | null => {
+    if (!user) return null;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.branchId ? parseInt(payload.branchId) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Permission functions based on API authorization table
+  const canCreate = (): boolean => hasRole('Admin') || hasRole('Editor'); // User cannot create anything
+  const canEdit = (): boolean => hasRole('Admin') || hasRole('Editor'); // User cannot edit anything  
+  const canDelete = (): boolean => hasRole('Admin') || hasRole('Editor'); // User cannot delete anything (Admin can delete all, Editor can delete own company/branch items)
+  const canViewAll = (): boolean => hasRole('Admin'); // Only Admin can view all data across all companies
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -187,6 +229,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     hasRole,
     isAdmin,
     isEditor,
+    // Helper properties and functions
+    isAdminUser,
+    isEditorUser,
+    isRegularUser,
+    getCompanyId,
+    getBranchId,
+    canCreate,
+    canEdit,
+    canDelete,
+    canViewAll,
   };
 
   return (
@@ -204,5 +256,8 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
+// Alias for convenience
+export const useAuthContext = useAuth;
 
 export default AuthProvider;

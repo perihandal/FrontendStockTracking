@@ -30,6 +30,7 @@ import { useAuth } from 'src/contexts/auth-context';
 import { WarehouseService, type WarehouseDto, type CreateWarehouseRequest, type UpdateWarehouseRequest } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
+import { CanCreate } from 'src/components/permission';
 
 import { WarehouseForm } from '../warehouse-form';
 
@@ -271,13 +272,15 @@ export function WarehousesView() {
         <Typography variant="h4">
           Depolar
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={handleNewWarehouse}
-        >
-          Yeni Depo
-        </Button>
+        <CanCreate>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={handleNewWarehouse}
+          >
+            Yeni Depo
+          </Button>
+        </CanCreate>
       </Box>
 
       <Card>

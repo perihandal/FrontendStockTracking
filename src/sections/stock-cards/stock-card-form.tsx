@@ -1,6 +1,6 @@
 import type { StockCardDto, StockCardType } from 'src/services/api';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import {
@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 
 import { CompanyService, CategoryService } from 'src/services/api';
+import { useAuth } from 'src/contexts/auth-context';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -48,6 +49,8 @@ const stockCardTypes: { value: StockCardType; label: string }[] = [
 const units = ['Adet', 'Kg', 'Litre', 'Metre', 'Metrekare', 'Metreküp', 'Paket', 'Kutu'];
 
 export function StockCardForm({ onSubmit, editMode = false, selected, isLoading = false }: StockCardFormProps) {
+  const { user, isAdminUser, getCompanyId } = useAuth();
+  
   const [formData, setFormData] = useState<{
     name: string;
     code: string;
@@ -84,11 +87,23 @@ export function StockCardForm({ onSubmit, editMode = false, selected, isLoading 
         console.log('✅ Companies API result:', result);
         console.log('✅ Companies data:', result?.data);
         console.log('✅ Companies success:', result?.isSuccess);
+        
         if (!result?.isSuccess) {
           console.error('❌ Companies API returned success: false');
           console.error('❌ Companies API message:', result?.errorMessage);
         }
-        return result;
+        
+        // Role-based filtering
+        let companiesData = result?.data || [];
+        if (!isAdminUser && user) {
+          const userCompanyId = getCompanyId();
+          if (userCompanyId) {
+            companiesData = companiesData.filter((company: any) => company.id === userCompanyId);
+            console.log('🔍 Stock Card Form - Filtered companies for Editor:', companiesData);
+          }
+        }
+        
+        return { ...result, data: companiesData };
       } catch (error) {
         console.error('❌ Companies API error:', error);
         console.error('❌ Companies API error details:', {
@@ -176,6 +191,17 @@ export function StockCardForm({ onSubmit, editMode = false, selected, isLoading 
 
 
 
+
+  // Auto-select company for Editor users
+  useEffect(() => {
+    if (!isAdminUser && user && companiesResponse?.data?.length > 0) {
+      const userCompanyId = getCompanyId();
+      if (userCompanyId && formData.companyId === undefined) {
+        setFormData(prev => ({ ...prev, companyId: userCompanyId }));
+        console.log('🔍 Stock Card Form - Auto-selected company for Editor:', userCompanyId);
+      }
+    }
+  }, [isAdminUser, user, companiesResponse, getCompanyId, formData.companyId]);
 
   // Data processing
   const companies = companiesResponse?.data || [];

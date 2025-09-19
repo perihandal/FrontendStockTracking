@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -13,6 +14,10 @@ import InputLabel from '@mui/material/InputLabel';
 import Typography from '@mui/material/Typography';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import CircularProgress from '@mui/material/CircularProgress';
+
+import { useAuth } from 'src/contexts/auth-context';
+import { CompanyService } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -38,18 +43,39 @@ type BranchFormProps = {
   initialData?: BranchFormData;
 };
 
-// Mock veriler
-const mockStockCards: Company[] = [
-  { id: 1, name: 'ABC Şirketi', code: 'COM001' },
-  { id: 2, name: 'XYZ Şirketi', code: 'COM002' },
-];
-
 export function BranchForm({ 
   onSubmit, 
   onCancel, 
   isEditMode = false, 
   initialData 
 }: BranchFormProps) {
+  const { user, isAdminUser, getCompanyId } = useAuth();
+
+  // Şirketleri API'den çek
+  const { data: companies = [], isLoading: companiesLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      try {
+        const response = await CompanyService.getCompanies();
+        console.log('🔍 Branch Form - Companies response:', response);
+        
+        let companiesData = response.data || [];
+        
+        // Editor ise sadece kendi şirketini göster
+        if (!isAdminUser && user) {
+          const userCompanyId = getCompanyId();
+          if (userCompanyId) {
+            companiesData = companiesData.filter((company: any) => company.id === userCompanyId);
+          }
+        }
+        
+        return companiesData;
+      } catch (error) {
+        console.error('❌ Branch Form - Companies error:', error);
+        return [];
+      }
+    },
+  });
   const [formData, setFormData] = useState<BranchFormData>({
     code: '',
     name: '',
@@ -64,8 +90,14 @@ export function BranchForm({
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
+    } else if (!isAdminUser && user) {
+      // Editor ise otomatik olarak kendi şirketini seç
+      const userCompanyId = getCompanyId();
+      if (userCompanyId) {
+        setFormData(prev => ({ ...prev, companyId: userCompanyId }));
+      }
     }
-  }, [initialData]);
+  }, [initialData, isAdminUser, user, getCompanyId]);
 
   const handleInputChange = (field: keyof BranchFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -172,12 +204,20 @@ export function BranchForm({
               value={formData.companyId}
               onChange={(e) => handleInputChange('companyId', Number(e.target.value))}
               label="Şirket"
+              disabled={companiesLoading} // Sadece loading sırasında disabled
             >
-              {mockStockCards.map((company) => (
-                <MenuItem key={company.id} value={company.id}>
-                  {company.name}
+              {companiesLoading ? (
+                <MenuItem disabled>
+                  <CircularProgress size={24} sx={{ mr: 1 }} />
+                  Yükleniyor...
                 </MenuItem>
-              ))}
+              ) : (
+                companies.map((company: any) => (
+                  <MenuItem key={company.id} value={company.id}>
+                    {company.name}
+                  </MenuItem>
+                ))
+              )}
             </Select>
             {errors.companyId && (
               <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>

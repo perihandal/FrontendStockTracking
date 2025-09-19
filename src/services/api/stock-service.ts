@@ -33,6 +33,7 @@ export interface UpdateStockCardRequest {
   subGroupId?: number;
   categoryId?: number;
   isActive?: boolean;
+  userId?: number; // Backend requirement
 }
 
 export interface StockCardDto {

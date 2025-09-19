@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import { type BranchDtoType } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
+import { CanEdit, CanDelete } from 'src/components/permission';
 
 type BranchesTableRowProps = {
   branch: BranchDtoType;
@@ -62,22 +63,26 @@ export function BranchesTableRow({
           >
             <Iconify icon="solar:eye-bold" />
           </IconButton>
-          <IconButton 
-            size="small" 
-            color="info"
-            onClick={() => onEdit(branch)}
-            title="Düzenle"
-          >
-            <Iconify icon="solar:pen-bold" />
-          </IconButton>
-          <IconButton 
-            size="small" 
-            color="error"
-            onClick={() => onDelete(branch)}
-            title="Sil"
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-          </IconButton>
+          <CanEdit>
+            <IconButton 
+              size="small" 
+              color="info"
+              onClick={() => onEdit(branch)}
+              title="Düzenle"
+            >
+              <Iconify icon="solar:pen-bold" />
+            </IconButton>
+          </CanEdit>
+          <CanDelete>
+            <IconButton 
+              size="small" 
+              color="error"
+              onClick={() => onDelete(branch)}
+              title="Sil"
+            >
+              <Iconify icon="solar:trash-bin-trash-bold" />
+            </IconButton>
+          </CanDelete>
         </Stack>
       </TableCell>
     </TableRow>
