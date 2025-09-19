@@ -28,6 +28,8 @@ export { default as BarcodeService } from './barcode-service';
 export { StockTransactionService } from './stock-transaction-service';
 export type { 
   User, 
+  UserProfile,
+  UserStatus,
   LoginRequest, 
   LoginResponse, 
   RegisterRequest, 

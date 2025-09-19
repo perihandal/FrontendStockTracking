@@ -1,6 +1,6 @@
 import type { ChangeEvent } from 'react';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
@@ -64,7 +64,7 @@ export function WarehousesView() {
   }>({ open: false, message: '', severity: 'success' });
 
   // API Queries
-  const { data: warehousesResult, isLoading, error } = useQuery({
+  const { data: warehousesResult, isLoading, error, refetch } = useQuery({
     queryKey: ['warehouses'],
     queryFn: async () => {
       console.log('🔍 WarehousesView: Fetching warehouses from API');
@@ -78,7 +78,15 @@ export function WarehousesView() {
       }
       return result;
     },
+    staleTime: 0, // Her zaman fresh data çek
+    refetchOnMount: true, // Component mount olduğunda yeniden çek
+    refetchOnWindowFocus: true, // Pencere odaklandığında yeniden çek
   });
+
+  // Component mount olduğunda veriyi yenile
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   // Mutations
   const createWarehouseMutation = useMutation({
@@ -272,15 +280,25 @@ export function WarehousesView() {
         <Typography variant="h4">
           Depolar
         </Typography>
-        <CanCreate>
+        <Stack direction="row" spacing={1}>
           <Button
-            variant="contained"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-            onClick={handleNewWarehouse}
+            variant="outlined"
+            startIcon={<Iconify icon="solar:restart-bold" />}
+            onClick={() => refetch()}
+            disabled={isLoading}
           >
-            Yeni Depo
+            Yenile
           </Button>
-        </CanCreate>
+          <CanCreate>
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={handleNewWarehouse}
+            >
+              Yeni Depo
+            </Button>
+          </CanCreate>
+        </Stack>
       </Box>
 
       <Card>

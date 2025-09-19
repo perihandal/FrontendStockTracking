@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router';
 
 import { useAuth } from 'src/contexts/auth-context';
+import { RoleAccessGuard } from './role-access-guard';
 
 // ----------------------------------------------------------------------
 
@@ -34,6 +35,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   console.log('🔐 User authenticated, rendering protected content');
 
-  // Eğer kullanıcı giriş yapmışsa children'ı render et
-  return <>{children}</>;
+  // Eğer kullanıcı giriş yapmışsa children'ı RoleAccessGuard ile kontrol ederek render et
+  return (
+    <RoleAccessGuard>
+      {children}
+    </RoleAccessGuard>
+  );
 }

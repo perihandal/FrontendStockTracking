@@ -25,9 +25,11 @@ export const CategoriesPage = lazy(() => import('src/pages/categories'));
 export const GroupsPage = lazy(() => import('src/pages/groups'));
 export const PricesPage = lazy(() => import('src/pages/prices'));
 export const UsersPage = lazy(() => import('src/pages/users'));
+export const ProfilePage = lazy(() => import('src/pages/profile'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
+export const SignUpPage = lazy(() => import('src/pages/sign-up'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
@@ -83,6 +85,7 @@ export const routesSection: RouteObject[] = [
         { path: 'groups', element: <GroupsPage /> },
         { path: 'prices', element: <PricesPage /> },
       { path: 'users', element: <UsersPage /> },
+      { path: 'profile', element: <ProfilePage /> },
       { path: 'user', element: <UserPage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'blog', element: <BlogPage /> },
@@ -93,6 +96,14 @@ export const routesSection: RouteObject[] = [
     element: (
       <AuthLayout>
         <SignInPage />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: 'sign-up',
+    element: (
+      <AuthLayout>
+        <SignUpPage />
       </AuthLayout>
     ),
   },

@@ -103,6 +103,14 @@ export function PriceHistoryTableRow({ priceHistory }: PriceHistoryTableRowProps
       
       <TableCell>
         <Chip
+          label={priceHistory.isActive ? 'Aktif' : 'Pasif'}
+          size="small"
+          color={priceHistory.isActive ? 'success' : 'error'}
+        />
+      </TableCell>
+      
+      <TableCell>
+        <Chip
           label={formatDate(priceHistory.changeDate)}
           size="small"
           variant="outlined"

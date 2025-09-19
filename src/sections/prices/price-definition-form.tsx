@@ -14,6 +14,8 @@ import {
   Alert,
   CircularProgress,
   Stack,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 
 import type {
@@ -39,6 +41,7 @@ export function PriceDefinitionForm({
     currency: Currency.TRY,
     validFrom: new Date().toISOString().split('T')[0],
     validTo: undefined,
+    isActive: true,
     stockCardId: 0,
     userId: 1,
   });
@@ -64,6 +67,7 @@ export function PriceDefinitionForm({
         currency: priceDefinition.currency,
         validFrom: priceDefinition.validFrom.split('T')[0],
         validTo: priceDefinition.validTo ? priceDefinition.validTo.split('T')[0] : undefined,
+        isActive: priceDefinition.isActive,
         stockCardId: priceDefinition.stockCardId,
         userId: priceDefinition.userId,
       });
@@ -75,6 +79,7 @@ export function PriceDefinitionForm({
         currency: Currency.TRY,
         validFrom: new Date().toISOString().split('T')[0],
         validTo: undefined,
+        isActive: true,
         stockCardId: 0,
         userId: 1,
       });
@@ -163,6 +168,7 @@ export function PriceDefinitionForm({
           currency: formData.currency,
           validFrom: formData.validFrom,
           validTo: formData.validTo,
+          isActive: formData.isActive,
           userId: formData.userId,
         };
 
@@ -185,6 +191,7 @@ export function PriceDefinitionForm({
           currency: formData.currency,
           validFrom: formData.validFrom,
           validTo: formData.validTo,
+          isActive: formData.isActive,
           stockCardId: formData.stockCardId,
           userId: formData.userId,
         };
@@ -216,6 +223,7 @@ export function PriceDefinitionForm({
       currency: Currency.TRY,
       validFrom: new Date().toISOString().split('T')[0],
       validTo: undefined,
+      isActive: true,
       stockCardId: 0,
       userId: 1,
     });
@@ -339,6 +347,19 @@ export function PriceDefinitionForm({
                 InputLabelProps={{ shrink: true }}
               />
             </Box>
+
+            {/* Active Status */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.isActive}
+                  onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Aktif"
+              sx={{ justifyContent: 'flex-start' }}
+            />
           </Stack>
         </Box>
       </DialogContent>

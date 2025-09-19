@@ -42,6 +42,28 @@ export interface User {
   roles: string[];
 }
 
+export interface UserProfile {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  isActive: boolean;
+  companyId?: number;
+  companyName?: string;
+  branchId?: number;
+  branchName?: string;
+  roles: string[];
+}
+
+export interface UserStatus {
+  id: number;
+  isActive: boolean;
+  roles: string[];
+  hasAdminRole: boolean;
+  hasEditorRole: boolean;
+  hasUserRole: boolean;
+}
+
 // Authentication Service
 export class AuthService {
   // Login
@@ -65,6 +87,18 @@ export class AuthService {
   // Change Password
   static async changePassword(passwordData: ChangePasswordRequest): Promise<{ message: string }> {
     const response = await apiClient.post('/auth/change-password', passwordData);
+    return response.data;
+  }
+
+  // Get User Profile
+  static async getUserProfile(): Promise<UserProfile> {
+    const response = await apiClient.get('/users/profile');
+    return response.data;
+  }
+
+  // Get User Status
+  static async getUserStatus(): Promise<UserStatus> {
+    const response = await apiClient.get('/users/my-status');
     return response.data;
   }
 

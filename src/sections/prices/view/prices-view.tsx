@@ -350,19 +350,20 @@ export function PricesView() {
                   <TableCell>Eski Fiyat</TableCell>
                   <TableCell>Yeni Fiyat</TableCell>
                   <TableCell>Değişim</TableCell>
+                  <TableCell>Durum</TableCell>
                   <TableCell>Değişim Tarihi</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center">
+                    <TableCell colSpan={6} align="center">
                       <CircularProgress />
                     </TableCell>
                   </TableRow>
                 ) : paginatedPriceHistory.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={6}>
                       <TableNoData />
                     </TableCell>
                   </TableRow>

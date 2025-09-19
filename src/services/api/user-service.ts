@@ -51,8 +51,20 @@ export class UserService {
 
   // 2. Belirli bir kullanıcının tüm bilgilerini getir (şirket, branch, roller dahil)
   static async getUserById(id: number): Promise<UserDto> {
+    console.log('🔍 UserService.getUserById: Making API call for user:', id);
     const response = await apiClient.get(`/users/${id}`);
-    return response.data;
+    console.log('🔍 UserService.getUserById: Raw response:', response);
+    console.log('🔍 UserService.getUserById: Response.data:', response.data);
+    console.log('🔍 UserService.getUserById: Response.data type:', typeof response.data);
+    
+    // Backend response formatını kontrol et
+    if (response.data && response.data.data) {
+      console.log('🔍 UserService.getUserById: Found data.data format');
+      return response.data.data;
+    } else {
+      console.log('🔍 UserService.getUserById: Using direct response.data format');
+      return response.data;
+    }
   }
 
   // 3. Kullanıcının genel bilgilerini güncelle

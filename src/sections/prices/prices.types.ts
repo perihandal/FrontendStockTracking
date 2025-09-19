@@ -34,6 +34,7 @@ export interface CreatePriceDefinitionFormData {
   currency: Currency;
   validFrom: string;
   validTo?: string;
+  isActive: boolean;
   stockCardId: number;
   userId: number;
 }
@@ -44,6 +45,7 @@ export interface UpdatePriceDefinitionFormData {
   currency: Currency;
   validFrom: string;
   validTo?: string;
+  isActive: boolean;
   userId: number;
 }
 
@@ -70,6 +72,7 @@ export interface PriceHistoryDto {
   oldPrice: number;
   newPrice: number;
   changeDate: string;
+  isActive: boolean;
 }
 
 // Helper functions for enum display

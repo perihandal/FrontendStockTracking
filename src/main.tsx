@@ -13,7 +13,9 @@ import { ErrorBoundary } from './routes/components';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 0, // Veriyi her zaman stale kabul et, böylece her sayfa geçişinde yeniden çek
+      refetchOnMount: true, // Component mount olduğunda yeniden çek
+      refetchOnWindowFocus: true, // Pencere odaklandığında yeniden çek
       retry: 1,
     },
   },

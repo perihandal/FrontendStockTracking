@@ -136,6 +136,7 @@ export function SignInView() {
             component="span"
             variant="subtitle2"
             sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => router.push('/sign-up')}
           >
             Get started
           </Typography>
