@@ -57,6 +57,12 @@ const navItems: NavItem[] = [
     roles: ['Admin', 'Editor', 'User'], // Herkes okuyabilir (yetki tablosuna göre)
   },
   {
+    title: 'Depo Stokları',
+    path: '/dashboard/warehouse-stocks',
+    icon: icon('ic-cart'),
+    roles: ['Admin', 'Editor', 'User'], // Herkes okuyabilir (yetki tablosuna göre)
+  },
+  {
     title: 'Barkodlar',
     path: '/dashboard/barcodes',
     icon: icon('ic-barcode'),

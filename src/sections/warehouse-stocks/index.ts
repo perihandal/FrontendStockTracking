@@ -1,0 +1,1 @@
+export { WarehouseStocksView } from './view/warehouse-stocks-view';

@@ -18,6 +18,9 @@ export { default as PriceService } from './price-service';
 // Warehouse Service
 export { default as WarehouseService } from './warehouse-service';
 
+// Warehouse Stocks Service
+export { WarehouseStockService } from './warehouse-stocks-service';
+
 // Report Service
 export { default as ReportService } from './report-service';
 // Branch Service
@@ -42,6 +45,13 @@ export type {
   CreateWarehouseRequest, 
   UpdateWarehouseRequest 
 } from './warehouse-service';
+
+export type { 
+  WarehouseStockDto as WarehouseStockDtoType, 
+  CreateWarehouseStockRequest, 
+  UpdateWarehouseStockRequest,
+  WarehouseStockQueryParams
+} from './warehouse-stocks-service';
 export type { 
   BranchDto, 
   CompanyDto, 
