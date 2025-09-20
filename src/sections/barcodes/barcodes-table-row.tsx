@@ -21,6 +21,8 @@ type BarcodesTableRowProps = {
   onDelete: () => void;
   onSetDefault: () => void;
   onPreview: () => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 };
 
 export function BarcodesTableRow({
@@ -32,6 +34,8 @@ export function BarcodesTableRow({
   onDelete,
   onSetDefault,
   onPreview,
+  canEdit = true,
+  canDelete = true,
 }: BarcodesTableRowProps) {
   const theme = useTheme();
 
@@ -40,7 +44,9 @@ export function BarcodesTableRow({
   return (
     <TableRow hover selected={selected}>
       <TableCell padding="checkbox">
-        <Checkbox checked={selected} onChange={(event, checked) => onSelectClick(event as unknown as React.MouseEvent)} />
+        {canDelete && (
+          <Checkbox checked={selected} onChange={(event, checked) => onSelectClick(event as unknown as React.MouseEvent)} />
+        )}
       </TableCell>
 
       <TableCell>
@@ -88,19 +94,23 @@ export function BarcodesTableRow({
           <Iconify icon="eva:search-fill" />
         </IconButton>
         
-        <IconButton onClick={onEdit} size="small" title="Düzenle">
-          <Iconify icon="solar:pen-bold" />
-        </IconButton>
+        {canEdit && (
+          <IconButton onClick={onEdit} size="small" title="Düzenle">
+            <Iconify icon="solar:pen-bold" />
+          </IconButton>
+        )}
 
-        {!barcode.isDefault && (
+        {canEdit && !barcode.isDefault && (
           <IconButton onClick={onSetDefault} size="small" color="warning" title="Varsayılan Yap">
             <Iconify icon="eva:search-fill" />
           </IconButton>
         )}
 
-        <IconButton onClick={onDelete} size="small" color="error" title="Sil">
-          <Iconify icon="solar:trash-bin-trash-bold" />
-        </IconButton>
+        {canDelete && (
+          <IconButton onClick={onDelete} size="small" color="error" title="Sil">
+            <Iconify icon="solar:trash-bin-trash-bold" />
+          </IconButton>
+        )}
       </TableCell>
     </TableRow>
   );

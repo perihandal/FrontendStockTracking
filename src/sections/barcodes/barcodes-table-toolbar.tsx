@@ -18,6 +18,7 @@ type BarcodesTableToolbarProps = {
   onFilterName: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onDelete: () => void;
   onBulkPrint?: () => void;
+  canDelete?: boolean;
 };
 
 export function BarcodesTableToolbar({
@@ -26,6 +27,7 @@ export function BarcodesTableToolbar({
   onFilterName,
   onDelete,
   onBulkPrint,
+  canDelete = true,
 }: BarcodesTableToolbarProps) {
   return (
     <Toolbar
@@ -65,11 +67,13 @@ export function BarcodesTableToolbar({
               <Iconify icon="eva:search-fill" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Sil">
-            <IconButton onClick={onDelete} color="error">
-              <Iconify icon="solar:trash-bin-trash-bold" />
-            </IconButton>
-          </Tooltip>
+          {canDelete && (
+            <Tooltip title="Sil">
+              <IconButton onClick={onDelete} color="error">
+                <Iconify icon="solar:trash-bin-trash-bold" />
+              </IconButton>
+            </Tooltip>
+          )}
         </>
       ) : (
         <Box sx={{ flex: '1 1 auto' }} />

@@ -66,7 +66,7 @@ const navItems: NavItem[] = [
     title: 'Barkodlar',
     path: '/dashboard/barcodes',
     icon: icon('ic-barcode'),
-    roles: ['Admin', 'Editor'], // Admin ve Editor
+    roles: ['Admin', 'Editor', 'User'], // Admin, Editor ve User
   },
   {
     title: 'Kategoriler',
@@ -84,7 +84,7 @@ const navItems: NavItem[] = [
     title: 'Fiyat Yönetimi',
     path: '/dashboard/prices',
     icon: icon('ic-analytics'),
-    roles: ['Admin', 'Editor'], // Admin ve Editor
+    roles: ['Admin', 'Editor', 'User'], // Admin, Editor ve User
   },
   {
     title: 'Kullanıcılar',

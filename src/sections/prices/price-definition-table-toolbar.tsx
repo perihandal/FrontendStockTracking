@@ -11,11 +11,13 @@ import { Iconify } from 'src/components/iconify';
 interface PriceDefinitionTableToolbarProps {
   onFilterChange: (filter: string) => void;
   onCreateClick: () => void;
+  canCreate?: boolean;
 }
 
 export function PriceDefinitionTableToolbar({
   onFilterChange,
   onCreateClick,
+  canCreate = true,
 }: PriceDefinitionTableToolbarProps) {
   const [filter, setFilter] = useState('');
 
@@ -42,13 +44,15 @@ export function PriceDefinitionTableToolbar({
           sx={{ width: { xs: 1, sm: 'auto' } }}
         />
         
-        <Button
-          variant="contained"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={onCreateClick}
-        >
-          Yeni Fiyat Tanımı
-        </Button>
+        {canCreate && (
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={onCreateClick}
+          >
+            Yeni Fiyat Tanımı
+          </Button>
+        )}
       </Stack>
     </Box>
   );

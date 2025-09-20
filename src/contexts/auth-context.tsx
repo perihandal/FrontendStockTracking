@@ -28,6 +28,7 @@ interface AuthContextType {
   canEdit: () => boolean;
   canDelete: () => boolean;
   canViewAll: () => boolean;
+  canView: () => boolean;
 }
 
 // Create Context
@@ -234,6 +235,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const canEdit = (): boolean => hasRole('Admin') || hasRole('Editor'); // User cannot edit anything  
   const canDelete = (): boolean => hasRole('Admin') || hasRole('Editor'); // User cannot delete anything (Admin can delete all, Editor can delete own company/branch items)
   const canViewAll = (): boolean => hasRole('Admin'); // Only Admin can view all data across all companies
+  const canView = (): boolean => hasRole('Admin') || hasRole('Editor') || hasRole('User'); // User can view data (read-only access)
 
   const value: AuthContextType = {
     user,
@@ -256,6 +258,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     canEdit,
     canDelete,
     canViewAll,
+    canView,
   };
 
   return (

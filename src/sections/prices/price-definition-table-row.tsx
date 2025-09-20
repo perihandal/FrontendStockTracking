@@ -17,12 +17,18 @@ interface PriceDefinitionTableRowProps {
   priceDefinition: PriceDefinition;
   onEdit: (priceDefinition: PriceDefinition) => void;
   onDelete: (id: number) => void;
+  onView: (priceDefinition: PriceDefinition) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export function PriceDefinitionTableRow({
   priceDefinition,
   onEdit,
   onDelete,
+  onView,
+  canEdit = true,
+  canDelete = true,
 }: PriceDefinitionTableRowProps) {
   const theme = useTheme();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -89,26 +95,40 @@ export function PriceDefinitionTableRow({
       
       <TableCell align="right">
         <Stack direction="row" spacing={1}>
-          <Tooltip title="Düzenle">
+          <Tooltip title="Detayları Görüntüle">
             <IconButton
               size="small"
-              onClick={() => onEdit(priceDefinition)}
-              sx={{ color: theme.palette.primary.main }}
+              onClick={() => onView(priceDefinition)}
+              sx={{ color: theme.palette.info.main }}
             >
-              <Iconify icon="solar:pen-bold" />
+              <Iconify icon="solar:eye-bold" />
             </IconButton>
           </Tooltip>
           
-          <Tooltip title="Sil">
-            <IconButton
-              size="small"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              sx={{ color: theme.palette.error.main }}
-            >
-              <Iconify icon="solar:trash-bin-trash-bold" />
-            </IconButton>
-          </Tooltip>
+          {canEdit && (
+            <Tooltip title="Düzenle">
+              <IconButton
+                size="small"
+                onClick={() => onEdit(priceDefinition)}
+                sx={{ color: theme.palette.primary.main }}
+              >
+                <Iconify icon="solar:pen-bold" />
+              </IconButton>
+            </Tooltip>
+          )}
+          
+          {canDelete && (
+            <Tooltip title="Sil">
+              <IconButton
+                size="small"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                sx={{ color: theme.palette.error.main }}
+              >
+                <Iconify icon="solar:trash-bin-trash-bold" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Stack>
       </TableCell>
     </TableRow>

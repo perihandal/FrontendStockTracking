@@ -17,8 +17,15 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Chip,
 } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
+import { useAuth } from 'src/contexts/auth-context';
 
 import { PriceDefinitionForm } from '../price-definition-form';
 import { PriceDefinitionTableRow } from '../price-definition-table-row';
@@ -28,6 +35,7 @@ import { PriceHistoryTableToolbar } from '../price-history-table-toolbar';
 import { TableNoData } from '../table-no-data';
 
 import type { PriceDefinition, PriceHistoryDto } from '../prices.types';
+import { getPriceTypeLabel, getCurrencyLabel, getCurrencySymbol } from '../prices.types';
 import { PriceService } from 'src/services/api';
 
 interface TabPanelProps {
@@ -53,6 +61,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export function PricesView() {
+  const { canCreate, canEdit, canDelete } = useAuth();
   const [currentTab, setCurrentTab] = useState(0);
   
   // Price Definitions state
@@ -81,6 +90,10 @@ export function PricesView() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingPriceDefinition, setEditingPriceDefinition] = useState<PriceDefinition | null>(null);
   const [isEdit, setIsEdit] = useState(false);
+  
+  // View detail state
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewingPriceDefinition, setViewingPriceDefinition] = useState<PriceDefinition | null>(null);
   
   // Pagination state
   const [page, setPage] = useState(0);
@@ -191,6 +204,12 @@ export function PricesView() {
     setFormOpen(true);
   };
 
+  const handleView = (priceDefinition: PriceDefinition) => {
+    console.log('👁️ View price definition:', priceDefinition);
+    setViewingPriceDefinition(priceDefinition);
+    setViewOpen(true);
+  };
+
   const handleDelete = async (id: number) => {
     try {
       const response = await PriceService.deletePriceDefinition(id);
@@ -282,6 +301,7 @@ export function PricesView() {
           <PriceDefinitionTableToolbar
             onFilterChange={handlePriceDefinitionFilterChange}
             onCreateClick={handleCreateClick}
+            canCreate={canCreate()}
           />
 
           <TableContainer>
@@ -318,6 +338,9 @@ export function PricesView() {
                       priceDefinition={priceDefinition}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onView={handleView}
+                      canEdit={canEdit()}
+                      canDelete={canDelete()}
                     />
                   ))
                 )}
@@ -401,6 +424,93 @@ export function PricesView() {
         priceDefinition={editingPriceDefinition || undefined}
         isEdit={isEdit}
       />
+
+      {/* View Detail Dialog */}
+      <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Fiyat Tanımı Detayları</DialogTitle>
+        <DialogContent dividers>
+          {viewingPriceDefinition ? (
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Stok Kartı
+                </Typography>
+                <Typography variant="body1">
+                  {viewingPriceDefinition.stockCardName}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Fiyat Türü
+                </Typography>
+                <Chip
+                  label={getPriceTypeLabel(viewingPriceDefinition.priceType)}
+                  size="small"
+                  color={viewingPriceDefinition.priceType === 1 ? 'primary' : 
+                         viewingPriceDefinition.priceType === 2 ? 'success' : 
+                         viewingPriceDefinition.priceType === 3 ? 'warning' : 'default'}
+                />
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Fiyat
+                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography variant="h6">
+                    {viewingPriceDefinition.price.toFixed(2)} {getCurrencySymbol(viewingPriceDefinition.currency)}
+                  </Typography>
+                  <Chip
+                    label={getCurrencyLabel(viewingPriceDefinition.currency)}
+                    size="small"
+                    variant="outlined"
+                  />
+                </Stack>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Geçerlilik Tarihi
+                </Typography>
+                <Typography variant="body1">
+                  {new Date(viewingPriceDefinition.validFrom).toLocaleDateString('tr-TR')}
+                  {viewingPriceDefinition.validTo && 
+                    ` - ${new Date(viewingPriceDefinition.validTo).toLocaleDateString('tr-TR')}`
+                  }
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Durum
+                </Typography>
+                <Chip
+                  label={viewingPriceDefinition.isActive ? 'Aktif' : 'Pasif'}
+                  size="small"
+                  color={viewingPriceDefinition.isActive ? 'success' : 'error'}
+                />
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Oluşturan Kullanıcı
+                </Typography>
+                <Typography variant="body1">
+                  {viewingPriceDefinition.userFullName}
+                </Typography>
+              </Box>
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Detay bulunamadı.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewOpen(false)}>Kapat</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar */}
       <Snackbar

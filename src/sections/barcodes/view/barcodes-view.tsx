@@ -47,7 +47,7 @@ type BarcodeFormData = {
 };
 
 export function BarcodesView() {
-  const { user } = useAuth();
+  const { user, canCreate, canEdit, canDelete } = useAuth();
   const queryClient = useQueryClient();
 
   // State
@@ -346,14 +346,16 @@ export function BarcodesView() {
             >
               Manuel Giriş
             </Button>
-            <Button
-              variant="contained"
-              color="inherit"
-              startIcon={<Iconify icon="eva:checkmark-fill" />}
-              onClick={handleNewBarcode}
-            >
-              Yeni Barkod
-            </Button>
+            {canCreate() && (
+              <Button
+                variant="contained"
+                color="inherit"
+                startIcon={<Iconify icon="eva:checkmark-fill" />}
+                onClick={handleNewBarcode}
+              >
+                Yeni Barkod
+              </Button>
+            )}
           </Stack>
         </Stack>
 
@@ -404,6 +406,7 @@ export function BarcodesView() {
               setSelected([]);
             }}
             onBulkPrint={handleBulkPrint}
+            canDelete={canDelete()}
           />
 
           <Scrollbar>
@@ -416,6 +419,7 @@ export function BarcodesView() {
                   rowCount={barcodes.length}
                   onRequestSort={handleSort}
                   onSelectAllClick={handleSelectAllClick}
+                  canDelete={canDelete()}
                 />
                 <TableBody>
                   {paginatedBarcodes.map((barcode) => (
@@ -429,6 +433,8 @@ export function BarcodesView() {
                       onDelete={() => handleDelete(barcode)}
                       onSetDefault={() => handleSetDefault(barcode)}
                       onPreview={() => handlePreview(barcode)}
+                      canEdit={canEdit()}
+                      canDelete={canDelete()}
                     />
                   ))}
 
@@ -534,6 +540,7 @@ interface BarcodesTableHeadProps {
   rowCount: number;
   onRequestSort: (event: React.MouseEvent<unknown>, property: string) => void;
   onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  canDelete?: boolean;
 }
 
 function BarcodesTableHead({
@@ -543,6 +550,7 @@ function BarcodesTableHead({
   rowCount,
   onRequestSort,
   onSelectAllClick,
+  canDelete = true,
 }: BarcodesTableHeadProps) {
   const headLabel = [
     { id: 'barcodeCode', label: 'Barkod Kodu' },
@@ -557,11 +565,13 @@ function BarcodesTableHead({
     <TableHead>
       <TableRow>
         <TableCell padding="checkbox">
-          <Checkbox
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-          />
+          {canDelete && (
+            <Checkbox
+              indeterminate={numSelected > 0 && numSelected < rowCount}
+              checked={rowCount > 0 && numSelected === rowCount}
+              onChange={onSelectAllClick}
+            />
+          )}
         </TableCell>
         {headLabel.map((headCell) => (
           <TableCell
