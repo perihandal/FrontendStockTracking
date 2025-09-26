@@ -55,10 +55,20 @@ export function SignInView() {
         display: 'flex',
         alignItems: 'flex-end',
         flexDirection: 'column',
+        width: '100%',
+        maxWidth: 400,
+        mx: 'auto',
       }}
     >
       {error && (
-        <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 3, 
+            width: '100%',
+            borderRadius: 2,
+          }}
+        >
           {error}
         </Alert>
       )}
@@ -67,9 +77,15 @@ export function SignInView() {
         fullWidth
         name="username"
         label="Kullanıcı Adı"
+        placeholder="Kullanıcı adınızı girin"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        sx={{ mb: 3 }}
+        sx={{ 
+          mb: 3,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          }
+        }}
         disabled={isLoading}
         slotProps={{
           inputLabel: { shrink: true },
@@ -80,6 +96,7 @@ export function SignInView() {
         fullWidth
         name="password"
         label="Şifre"
+        placeholder="Şifrenizi girin"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         type={showPassword ? 'text' : 'password'}
@@ -89,27 +106,74 @@ export function SignInView() {
           input: {
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                <IconButton 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  edge="end"
+                  sx={{ color: 'text.secondary' }}
+                >
                   <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
                 </IconButton>
               </InputAdornment>
             ),
           },
         }}
-        sx={{ mb: 3 }}
+        sx={{ 
+          mb: 4,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          }
+        }}
       />
 
       <Button
         fullWidth
         size="large"
         type="submit"
-        color="inherit"
         variant="contained"
         disabled={isLoading}
-        startIcon={isLoading ? <CircularProgress size={20} /> : null}
+        startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
+        sx={{
+          py: 1.5,
+          borderRadius: 2,
+          fontSize: '1rem',
+          fontWeight: 600,
+          textTransform: 'none',
+          mb: 3,
+          backgroundColor: 'primary.main',
+          '&:hover': {
+            backgroundColor: 'primary.dark',
+          },
+        }}
       >
         {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
       </Button>
+
+      <Box sx={{ textAlign: 'center', width: '100%' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
+          Hesabınız yok mu?{' '}
+          <Typography
+            component="span"
+            variant="body2"
+            sx={{ 
+              color: 'primary.main',
+              cursor: 'pointer', 
+              textDecoration: 'underline',
+              fontWeight: 500,
+              '&:hover': {
+                color: 'primary.dark',
+              }
+            }}
+            onClick={() => router.push('/sign-up')}
+          >
+            Kayıt Ol
+          </Typography>
+        </Typography>
+      </Box>
     </Box>
   );
 
@@ -117,57 +181,37 @@ export function SignInView() {
     <>
       <Box
         sx={{
-          gap: 1.5,
+          gap: 2,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          mb: 5,
+          mb: 4,
+          textAlign: 'center',
         }}
       >
-        <Typography variant="h5">Sign in</Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: 'text.secondary',
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            fontWeight: 600,
+            color: 'text.primary',
+            mb: 1 
           }}
         >
-          Don&apos;t have an account?
-          <Typography
-            component="span"
-            variant="subtitle2"
-            sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
-            onClick={() => router.push('/sign-up')}
-          >
-            Get started
-          </Typography>
+          StokNet'e Hoşgeldiniz
+        </Typography>
+        <Typography
+          variant="body1"
+          sx={{
+            color: 'text.secondary',
+            maxWidth: 400,
+            lineHeight: 1.6,
+          }}
+        >
+          Envanterinizi kolayca yönetin, stok takibinizi dijitalleştirin.
+          Hesabınızla giriş yaparak başlayın.
         </Typography>
       </Box>
       {renderForm}
-      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
-        <Typography
-          variant="overline"
-          sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}
-        >
-          OR
-        </Typography>
-      </Divider>
-      <Box
-        sx={{
-          gap: 1,
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:google" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:github" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:twitter" />
-        </IconButton>
-      </Box>
     </>
   );
 }

@@ -9,10 +9,6 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import CircularProgress from '@mui/material/CircularProgress';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
 
 import { useRouter } from 'src/routes/hooks';
 
@@ -33,7 +29,6 @@ export function SignUpView() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'User',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -129,21 +124,38 @@ export function SignUpView() {
         display: 'flex',
         alignItems: 'flex-end',
         flexDirection: 'column',
+        width: '100%',
+        maxWidth: 480,
+        mx: 'auto',
       }}
     >
       {error && (
-        <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 3, 
+            width: '100%',
+            borderRadius: 2,
+          }}
+        >
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 2, width: '100%' }}>
+        <Alert 
+          severity="success" 
+          sx={{ 
+            mb: 3, 
+            width: '100%',
+            borderRadius: 2,
+          }}
+        >
           {success}
         </Alert>
       )}
 
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, width: '100%' }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 1.5, width: '100%' }}>
         <TextField
           fullWidth
           name="firstName"
@@ -174,7 +186,7 @@ export function SignUpView() {
         label="Kullanıcı Adı"
         value={formData.username}
         onChange={(e) => handleInputChange('username', e.target.value)}
-        sx={{ mb: 3 }}
+        sx={{ mb: 1.5 }}
         disabled={isLoading}
         slotProps={{
           inputLabel: { shrink: true },
@@ -188,26 +200,12 @@ export function SignUpView() {
         type="email"
         value={formData.email}
         onChange={(e) => handleInputChange('email', e.target.value)}
-        sx={{ mb: 3 }}
+        sx={{ mb: 1.5 }}
         disabled={isLoading}
         slotProps={{
           inputLabel: { shrink: true },
         }}
       />
-
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>Rol</InputLabel>
-        <Select
-          value={formData.role}
-          onChange={(e) => handleInputChange('role', e.target.value)}
-          label="Rol"
-          disabled={isLoading}
-        >
-          <MenuItem value="User">Kullanıcı</MenuItem>
-          <MenuItem value="Editor">Editör</MenuItem>
-          <MenuItem value="Admin">Admin</MenuItem>
-        </Select>
-      </FormControl>
 
       <TextField
         fullWidth
@@ -229,7 +227,7 @@ export function SignUpView() {
             ),
           },
         }}
-        sx={{ mb: 3 }}
+        sx={{ mb: 1.5 }}
       />
 
       <TextField
@@ -252,17 +250,27 @@ export function SignUpView() {
             ),
           },
         }}
-        sx={{ mb: 3 }}
+        sx={{ mb: 2 }}
       />
 
       <Button
         fullWidth
-        size="large"
+        size="medium"
         type="submit"
-        color="inherit"
         variant="contained"
         disabled={isLoading}
-        startIcon={isLoading ? <CircularProgress size={20} /> : null}
+        startIcon={isLoading ? <CircularProgress size={18} color="inherit" /> : null}
+        sx={{
+          py: 1.2,
+          borderRadius: 2,
+          fontSize: '0.95rem',
+          fontWeight: 600,
+          textTransform: 'none',
+          backgroundColor: 'primary.main',
+          '&:hover': {
+            backgroundColor: 'primary.dark',
+          },
+        }}
       >
         {isLoading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
       </Button>
@@ -273,25 +281,54 @@ export function SignUpView() {
     <>
       <Box
         sx={{
-          gap: 1.5,
+          gap: 0.5,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          mb: 5,
+          mb: 1.5, // Daha da azaltıldı
+          textAlign: 'center',
         }}
       >
-        <Typography variant="h5">Kayıt Ol</Typography>
+        <Typography 
+          variant="h6" // Daha da küçültüldü
+          sx={{ 
+            fontWeight: 600,
+            color: 'text.primary',
+            mb: 0.25 
+          }}
+        >
+          StokNet'e Kayıt Ol
+        </Typography>
         <Typography
           variant="body2"
           sx={{
             color: 'text.secondary',
+            maxWidth: 300, // Daha da azaltıldı
+            lineHeight: 1.3, // Daha da azaltıldı
           }}
         >
-          Zaten hesabınız var mı?
+          Hesabınızı oluşturun ve stok yönetimini dijitalleştirmeye başlayın.
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: 'text.secondary',
+            mt: 0.25, // Daha da azaltıldı
+          }}
+        >
+          Zaten hesabınız var mı?{' '}
           <Typography
             component="span"
-            variant="subtitle2"
-            sx={{ ml: 0.5, cursor: 'pointer', textDecoration: 'underline' }}
+            variant="body2"
+            sx={{ 
+              color: 'primary.main',
+              cursor: 'pointer', 
+              textDecoration: 'underline',
+              fontWeight: 500,
+              '&:hover': {
+                color: 'primary.dark',
+              }
+            }}
             onClick={handleSignInRedirect}
           >
             Giriş Yap
@@ -299,31 +336,6 @@ export function SignUpView() {
         </Typography>
       </Box>
       {renderForm}
-      <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
-        <Typography
-          variant="overline"
-          sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}
-        >
-          VEYA
-        </Typography>
-      </Divider>
-      <Box
-        sx={{
-          gap: 1,
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:google" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:github" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:twitter" />
-        </IconButton>
-      </Box>
     </>
   );
 }
