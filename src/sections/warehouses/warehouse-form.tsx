@@ -2,21 +2,21 @@ import { useQuery } from '@tanstack/react-query';
 import React, { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import Divider from '@mui/material/Divider';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import Select from '@mui/material/Select';
 import Switch from '@mui/material/Switch';
+import Divider from '@mui/material/Divider';
+import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import InputLabel from '@mui/material/InputLabel';
 import Typography from '@mui/material/Typography';
+import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
-import { CompanyService, BranchService } from 'src/services/api';
 import { useAuthContext } from 'src/contexts/auth-context';
+import { CompanyService, BranchService } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -97,10 +97,10 @@ export function WarehouseForm({
         console.log('👑 WarehouseForm: Admin user - showing all companies');
         return result;
       } else if (isEditorUser) {
-        const userCompanyId = getCompanyId();
-        console.log('✏️ WarehouseForm: Editor user - filtering to company:', userCompanyId);
-        const filteredData = result.data.filter(company => company.id === userCompanyId);
-        return { ...result, data: filteredData };
+  const userCompanyId = getCompanyId();
+  console.log('✏️ WarehouseForm: Editor user - filtering to company:', userCompanyId);
+  const filteredData = result.data?.filter(company => company.id === userCompanyId) ?? [];
+  return { ...result, data: filteredData };
       }
       
       // Regular users should not see companies in warehouse form typically
@@ -121,10 +121,10 @@ export function WarehouseForm({
         console.log('👑 WarehouseForm: Admin user - showing all branches');
         return result;
       } else if (isEditorUser) {
-        const userCompanyId = getCompanyId();
-        console.log('✏️ WarehouseForm: Editor user - filtering to company branches:', userCompanyId);
-        const filteredData = result.data.filter(branch => branch.companyId === userCompanyId);
-        return { ...result, data: filteredData };
+  const userCompanyId = getCompanyId();
+  console.log('✏️ WarehouseForm: Editor user - filtering to company branches:', userCompanyId);
+  const filteredData = result.data?.filter(branch => branch.companyId === userCompanyId) ?? [];
+  return { ...result, data: filteredData };
       } else {
         const userBranchId = getBranchId();
         console.log('👤 WarehouseForm: Regular user - filtering to branch:', userBranchId);

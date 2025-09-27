@@ -1,4 +1,6 @@
 import { useState } from 'react';
+
+import { useTheme } from '@mui/material/styles';
 import {
   TableRow,
   TableCell,
@@ -7,11 +9,12 @@ import {
   Stack,
   Tooltip,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+
 import { Iconify } from 'src/components/iconify';
 
-import type { PriceDefinition } from './prices.types';
 import { PriceType, Currency, getPriceTypeLabel, getCurrencyLabel, getCurrencySymbol } from './prices.types';
+
+import type { PriceDefinition } from './prices.types';
 
 interface PriceDefinitionTableRowProps {
   priceDefinition: PriceDefinition;
@@ -44,13 +47,9 @@ export function PriceDefinitionTableRow({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('tr-TR');
-  };
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('tr-TR');
 
-  const formatPrice = (price: number, currency: number) => {
-    return `${price.toFixed(2)} ${getCurrencySymbol(currency)}`;
-  };
+  const formatPrice = (price: number, currency: number) => `${price.toFixed(2)} ${getCurrencySymbol(currency)}`;
 
   return (
     <TableRow hover>

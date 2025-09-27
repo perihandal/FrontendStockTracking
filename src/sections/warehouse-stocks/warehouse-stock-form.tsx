@@ -2,19 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import React, { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import Divider from '@mui/material/Divider';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import Select from '@mui/material/Select';
+import Divider from '@mui/material/Divider';
+import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import InputLabel from '@mui/material/InputLabel';
 import Typography from '@mui/material/Typography';
+import FormControl from '@mui/material/FormControl';
 
-import { WarehouseService, StockService } from 'src/services/api';
 import { useAuthContext } from 'src/contexts/auth-context';
+import { WarehouseService, StockService } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -166,9 +166,7 @@ export function WarehouseStockForm({
   };
 
   // Helper function to format numbers
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('tr-TR').format(num);
-  };
+ const formatNumber = (num: number) => new Intl.NumberFormat('tr-TR').format(num);
 
   // Calculate available quantity
   const availableQuantity = formData.quantity - formData.reservedQuantity;

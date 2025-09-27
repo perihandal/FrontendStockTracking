@@ -1,4 +1,5 @@
 import type { MouseEvent } from 'react';
+
 import React from 'react';
 
 import Chip from '@mui/material/Chip';
@@ -10,6 +11,7 @@ import Typography from '@mui/material/Typography';
 
 import { Iconify } from 'src/components/iconify';
 import { CanEdit, CanDelete } from 'src/components/permission';
+
 import type { MainGroup } from './groups.types';
 
 export interface MainGroupsTableRowProps {

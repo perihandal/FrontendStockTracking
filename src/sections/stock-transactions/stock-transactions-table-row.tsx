@@ -1,13 +1,14 @@
-import Box from '@mui/material/Box';
 import type { StockTransactionDto } from 'src/services/api/stock-transaction-service';
 
-import { mapEnumToTransactionType } from 'src/utils/stock-card-utils';
+import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+
+import { mapEnumToTransactionType } from 'src/utils/stock-card-utils';
 
 import { Iconify } from 'src/components/iconify';
 

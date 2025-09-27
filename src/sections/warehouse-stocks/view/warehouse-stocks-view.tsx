@@ -24,10 +24,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
-import { 
-  WarehouseStockService, 
-  type WarehouseStockDto, 
-} from 'src/services/api';
+import { WarehouseStockService, type WarehouseStockDto, } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -85,9 +82,8 @@ export function WarehouseStocksView() {
   );
 
   // Helper function to format numbers
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('tr-TR').format(num || 0);
-  };
+ const formatNumber = (num: number) => new Intl.NumberFormat('tr-TR').format(num || 0);
+
 
   // Loading and error states
   if (isLoading) {
@@ -175,7 +171,11 @@ export function WarehouseStocksView() {
                       <IconButton 
                         size="small" 
                         color="primary"
-                        onClick={() => handleView(stock)}
+                          onClick={() => handleView({
+                            ...stock,
+                            stockCardCode: '',
+                            unit: ''
+                          })}
                       >
                         <Iconify icon="solar:eye-bold" />
                       </IconButton>

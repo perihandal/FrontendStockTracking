@@ -1,24 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import React, { useState, useEffect, useMemo } from 'react';
 
+// ------------------ MUI ------------------
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import Divider from '@mui/material/Divider';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import Switch from '@mui/material/Switch';
+import Select from '@mui/material/Select';
+import Divider from '@mui/material/Divider';
+import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { CompanyService, BranchService, StockService, BarcodeService, BarcodeType, BarcodeTypeLabels } from 'src/services/api';
 
@@ -151,14 +152,14 @@ export function BarcodeForm({
     console.log('🔍 BarcodeForm: Şirket seçildi:', formData.companyId);
     console.log('🔍 BarcodeForm: Tüm stok kartları:', stockCards);
     
-    const filteredStockCards = stockCards.filter(stockCard => {
+    const filtered = stockCards.filter(stockCard => {
       console.log(`🔍 Stok kartı ${stockCard.name}: companyId=${stockCard.companyId}, seçilen company=${formData.companyId}`);
       // Şirket bazında filtreleme
       return stockCard.companyId === formData.companyId;
     });
     
-    console.log('🔍 BarcodeForm: Filtrelenmiş stok kartları:', filteredStockCards);
-    return filteredStockCards;
+    console.log('🔍 BarcodeForm: Filtrelenmiş stok kartları:', filtered);
+    return filtered;
   }, [formData.companyId, stockCards]);
 
   // Kullanılan barkod türlerini filtrele

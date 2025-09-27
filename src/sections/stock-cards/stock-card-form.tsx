@@ -1,7 +1,7 @@
 import type { StockCardDto, StockCardType } from 'src/services/api';
 
-import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 
 import {
   Box,
@@ -16,8 +16,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-import { CompanyService, CategoryService } from 'src/services/api';
 import { useAuth } from 'src/contexts/auth-context';
+import { CompanyService, CategoryService } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
 

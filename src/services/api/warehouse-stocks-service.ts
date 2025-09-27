@@ -1,5 +1,4 @@
 import apiClient from './api-client';
-
 // WarehouseStock types - Backend response ile uyumlu
 export interface WarehouseStockDto {
   warehouseId: number;
@@ -10,6 +9,7 @@ export interface WarehouseStockDto {
   reservedQuantity?: number;
   availableQuantity?: number;
 }
+// WarehouseStock types - Backend response ile uyumlu
 
 export interface CreateWarehouseStockRequest {
   warehouseId: number;

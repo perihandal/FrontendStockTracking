@@ -5,27 +5,28 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import Table from '@mui/material/Table';
 import Paper from '@mui/material/Paper';
-import TableRow from '@mui/material/TableRow';
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import { useAuth } from 'src/contexts/auth-context';
+import TableRow from '@mui/material/TableRow';
 import Checkbox from '@mui/material/Checkbox';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
-import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
 import { printMultipleBarcodes } from 'src/utils/print-utils';
 
+import { useAuth } from 'src/contexts/auth-context';
 import { BarcodeService, CompanyService, BranchService, BarcodeCardDto, BarcodeType, BarcodeTypeLabels } from 'src/services/api';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { BarcodeScanner, BarcodeInputModal } from 'src/components/barcode-scanner/barcode-scanner';
@@ -70,16 +71,13 @@ export function BarcodesView() {
   const { data: barcodesResult, isLoading, error } = useQuery({
     queryKey: ['barcodes'],
     queryFn: async () => {
-      console.log('🔍 BarcodesView: Fetching barcodes from API');
       const result = await BarcodeService.getBarcodes();
-      console.log('📊 BarcodesView: Barcodes API response:', result);
       return result;
     },
   });
 
   const barcodes = barcodesResult?.data || [];
 
-  // Company & Branch lookup for detail modal names
   const { data: companiesResult } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => CompanyService.getCompanies(),
@@ -101,16 +99,13 @@ export function BarcodesView() {
     return found?.name || `#${id}`;
   };
 
-  // Mutations
   const createBarcodeMutation = useMutation({
     mutationFn: BarcodeService.createBarcode,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['barcodes'] });
       setOpenForm(false);
     },
-    onError: (err) => {
-      console.error('❌ BarcodesView: Error creating barcode:', err);
-    },
+    
   });
 
   const updateBarcodeMutation = useMutation({
@@ -119,9 +114,7 @@ export function BarcodesView() {
       queryClient.invalidateQueries({ queryKey: ['barcodes'] });
       setOpenForm(false);
     },
-    onError: (err) => {
-      console.error('❌ BarcodesView: Error updating barcode:', err);
-    },
+    
   });
 
   const deleteBarcodeMutation = useMutation({
@@ -129,9 +122,7 @@ export function BarcodesView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['barcodes'] });
     },
-    onError: (err) => {
-      console.error('❌ BarcodesView: Error deleting barcode:', err);
-    },
+    
   });
 
   const setDefaultMutation = useMutation({
@@ -139,9 +130,7 @@ export function BarcodesView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['barcodes'] });
     },
-    onError: (err) => {
-      console.error('❌ BarcodesView: Error setting default barcode:', err);
-    },
+    
   });
 
   // Handlers
@@ -279,10 +268,6 @@ export function BarcodesView() {
         companyId: Number(formData.companyId),
         userId: user?.id,
       };
-      
-      console.log('🔍 BarcodesView: User info:', user);
-      console.log('🔍 BarcodesView: User ID:', user?.id);
-      console.log('🔍 BarcodesView: Request data:', requestData);
       
       createBarcodeMutation.mutate(requestData);
     }

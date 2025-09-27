@@ -87,32 +87,23 @@ export interface ApiResponse<T> {
 export class CategoryService {
   // Categories
   static async getCategories(): Promise<ApiResponse<CategoryDto[]>> {
-    console.log('🔍 CategoryService.getCategories: Making API call to /api/Category');
     try {
       const response = await apiClient.get('/api/Category');
-      console.log('✅ CategoryService.getCategories: API call successful:', response);
-      console.log('🔍 CategoryService.getCategories: Response data:', response.data);
-      console.log('🔍 CategoryService.getCategories: Response.data type:', typeof response.data);
-      console.log('🔍 CategoryService.getCategories: Response.data keys:', Object.keys(response.data || {}));
       
       // Backend'ten gelen response formatını kontrol et
       if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        console.log('🔍 CategoryService.getCategories: Found data.data format, categories count:', response.data.data.length);
         return {
           data: response.data.data,
-          isSuccess: !response.data.errorMessage || response.data.errorMessage.length === 0
         };
       } else if (Array.isArray(response.data)) {
-        console.log('🔍 CategoryService.getCategories: Found direct array format, categories count:', response.data.length);
         return {
           data: response.data,
-          isSuccess: true
         };
       } else {
         console.warn('⚠️ CategoryService.getCategories: Unexpected response format:', response.data);
         return {
           data: [],
-          isSuccess: false
+ 
         };
       }
     } catch (error) {
@@ -127,8 +118,6 @@ export class CategoryService {
   }
 
   static async updateCategory(id: number, data: UpdateCategoryRequest): Promise<ApiResponse<{ id: number }>> {
-    console.log('🔄 CategoryService.updateCategory - Endpoint:', `/api/Category?id=${id}`);
-    console.log('🔄 CategoryService.updateCategory - Data:', data);
     
     // Query parameter ile endpoint
     const response = await apiClient.put(`/api/Category?id=${id}`, data);
@@ -136,7 +125,6 @@ export class CategoryService {
   }
 
   static async deleteCategory(id: number): Promise<ApiResponse<{ id: number }>> {
-    console.log('🗑️ CategoryService.deleteCategory - Endpoint:', `/api/Category?id=${id}`);
     
     const response = await apiClient.delete(`/api/Category?id=${id}`);
     return response.data;
@@ -144,32 +132,22 @@ export class CategoryService {
 
   // Main Groups
   static async getMainGroups(): Promise<ApiResponse<MainGroupDto[]>> {
-    console.log('🔍 CategoryService.getMainGroups: Making API call to /api/MainGroup');
     try {
       const response = await apiClient.get('/api/MainGroup');
-      console.log('✅ CategoryService.getMainGroups: API call successful:', response);
-      console.log('🔍 CategoryService.getMainGroups: Response data:', response.data);
-      console.log('🔍 CategoryService.getMainGroups: Response.data type:', typeof response.data);
-      console.log('🔍 CategoryService.getMainGroups: Response.data keys:', Object.keys(response.data || {}));
       
       // Backend'ten gelen response formatını kontrol et
       if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        console.log('🔍 CategoryService.getMainGroups: Found data.data format, main groups count:', response.data.data.length);
         return {
-          data: response.data.data,
-          isSuccess: !response.data.errorMessage || response.data.errorMessage.length === 0
+          data: response.data.data
         };
       } else if (Array.isArray(response.data)) {
-        console.log('🔍 CategoryService.getMainGroups: Found direct array format, main groups count:', response.data.length);
         return {
-          data: response.data,
-          isSuccess: true
+          data: response.data
         };
       } else {
         console.warn('⚠️ CategoryService.getMainGroups: Unexpected response format:', response.data);
         return {
-          data: [],
-          isSuccess: false
+          data: []
         };
       }
     } catch (error) {
@@ -200,32 +178,25 @@ export class CategoryService {
 
   // Sub Groups
   static async getSubGroups(): Promise<ApiResponse<SubGroupDto[]>> {
-    console.log('🔍 CategoryService.getSubGroups: Making API call to /api/SubGroup');
     try {
       const response = await apiClient.get('/api/SubGroup');
-      console.log('✅ CategoryService.getSubGroups: API call successful:', response);
-      console.log('🔍 CategoryService.getSubGroups: Response data:', response.data);
-      console.log('🔍 CategoryService.getSubGroups: Response.data type:', typeof response.data);
       console.log('🔍 CategoryService.getSubGroups: Response.data keys:', Object.keys(response.data || {}));
       
       // Backend'ten gelen response formatını kontrol et
       if (response.data && response.data.data && Array.isArray(response.data.data)) {
         console.log('🔍 CategoryService.getSubGroups: Found data.data format, sub groups count:', response.data.data.length);
         return {
-          data: response.data.data,
-          isSuccess: !response.data.errorMessage || response.data.errorMessage.length === 0
+          data: response.data.data
         };
       } else if (Array.isArray(response.data)) {
         console.log('🔍 CategoryService.getSubGroups: Found direct array format, sub groups count:', response.data.length);
         return {
           data: response.data,
-          isSuccess: true
         };
       } else {
         console.warn('⚠️ CategoryService.getSubGroups: Unexpected response format:', response.data);
         return {
-          data: [],
-          isSuccess: false
+          data: []
         };
       }
     } catch (error) {

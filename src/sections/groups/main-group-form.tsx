@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
+
+import { CategoryService } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
-import { CategoryService } from 'src/services/api';
+
 import type { MainGroupFormProps, CreateMainGroupFormData, UpdateMainGroupFormData } from './groups.types';
 
 // Form data interface

@@ -1,11 +1,11 @@
 import React from 'react';
 
+import Chip from '@mui/material/Chip';
 import { IconButton } from '@mui/material';
 import Checkbox from '@mui/material/Checkbox';
-import Chip from '@mui/material/Chip';
-import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import { useTheme } from '@mui/material/styles';
+import TableCell from '@mui/material/TableCell';
 import Typography from '@mui/material/Typography';
 
 import { BarcodeCardDto, BarcodeTypeLabels } from 'src/services/api';

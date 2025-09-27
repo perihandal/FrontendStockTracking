@@ -24,6 +24,7 @@ import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { mapStockCardTypeToEnum, mapEnumToStockCardType, mapBarcodeTypeToEnum } from 'src/utils/stock-card-utils';
+
 import { StockService } from 'src/services/api';
 import { useAuth } from 'src/contexts/auth-context';
 

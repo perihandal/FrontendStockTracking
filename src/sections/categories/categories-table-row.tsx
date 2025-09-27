@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { Iconify } from 'src/components/iconify';
+
 import type { Category } from './category.types';
 
 interface CategoriesTableRowProps {

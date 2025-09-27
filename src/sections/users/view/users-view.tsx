@@ -21,21 +21,23 @@ import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import InputLabel from '@mui/material/InputLabel';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
+import CircularProgress from '@mui/material/CircularProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { useAuth } from 'src/contexts/auth-context';
-import { Iconify } from 'src/components/iconify';
-import { UserService, type UserDto, type UserUpdateDto, type CompanyAssignDto } from 'src/services/api/user-service';
 import { CompanyService, type CompanyDto, type BranchDto } from 'src/services/api/company-service';
+import { UserService, type UserDto, type UserUpdateDto, type CompanyAssignDto } from 'src/services/api/user-service';
+
+import { Iconify } from 'src/components/iconify';
+
 
 export function UsersView() {
   const { isAdmin } = useAuth();
@@ -611,7 +613,7 @@ export function UsersView() {
           <Button 
             variant="contained" 
             onClick={handleEditSave}
-            startIcon={<Iconify icon="solar:diskette-bold" />}
+            startIcon={<Iconify icon="solar:eye-bold" />}
           >
             Kaydet
           </Button>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+
 import {
   Box,
   Card,
@@ -24,19 +25,21 @@ import {
   Button,
   Chip,
 } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
+
+import { PriceService } from 'src/services/api';
 import { useAuth } from 'src/contexts/auth-context';
 
-import { PriceDefinitionForm } from '../price-definition-form';
-import { PriceDefinitionTableRow } from '../price-definition-table-row';
-import { PriceDefinitionTableToolbar } from '../price-definition-table-toolbar';
-import { PriceHistoryTableRow } from '../price-history-table-row';
-import { PriceHistoryTableToolbar } from '../price-history-table-toolbar';
+import { Iconify } from 'src/components/iconify';
+
 import { TableNoData } from '../table-no-data';
+import { PriceDefinitionForm } from '../price-definition-form';
+import { PriceHistoryTableRow } from '../price-history-table-row';
+import { PriceDefinitionTableRow } from '../price-definition-table-row';
+import { PriceHistoryTableToolbar } from '../price-history-table-toolbar';
+import { PriceDefinitionTableToolbar } from '../price-definition-table-toolbar';
+import { getPriceTypeLabel, getCurrencyLabel, getCurrencySymbol } from '../prices.types';
 
 import type { PriceDefinition, PriceHistoryDto } from '../prices.types';
-import { getPriceTypeLabel, getCurrencyLabel, getCurrencySymbol } from '../prices.types';
-import { PriceService } from 'src/services/api';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -256,19 +259,21 @@ export function PricesView() {
   };
 
   // Paginated data
-  const paginatedPriceDefinitions = useMemo(() => {
-    return filteredPriceDefinitions.slice(
+  const paginatedPriceDefinitions = useMemo(
+    () => filteredPriceDefinitions.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
-    );
-  }, [filteredPriceDefinitions, page, rowsPerPage]);
+    ),
+    [filteredPriceDefinitions, page, rowsPerPage]
+  );
 
-  const paginatedPriceHistory = useMemo(() => {
-    return filteredPriceHistory.slice(
+  const paginatedPriceHistory = useMemo(
+    () => filteredPriceHistory.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
-    );
-  }, [filteredPriceHistory, page, rowsPerPage]);
+    ),
+    [filteredPriceHistory, page, rowsPerPage]
+  );
 
   return (
     <Container maxWidth="xl">
@@ -373,7 +378,6 @@ export function PricesView() {
                   <TableCell>Eski Fiyat</TableCell>
                   <TableCell>Yeni Fiyat</TableCell>
                   <TableCell>Değişim</TableCell>
-                  <TableCell>Durum</TableCell>
                   <TableCell>Değişim Tarihi</TableCell>
                 </TableRow>
               </TableHead>

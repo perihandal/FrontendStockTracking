@@ -197,7 +197,7 @@ export function SignInView() {
             mb: 1 
           }}
         >
-          StokNet'e Hoşgeldiniz
+          StokNet&apos;e Hoşgeldiniz
         </Typography>
         <Typography
           variant="body1"

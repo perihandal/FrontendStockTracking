@@ -4,8 +4,8 @@ import { mergeClasses } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 
 import { Logo } from 'src/components/logo';
 

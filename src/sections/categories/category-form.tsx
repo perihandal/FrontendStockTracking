@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Select from '@mui/material/Select';
 import Switch from '@mui/material/Switch';
+import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import InputLabel from '@mui/material/InputLabel';
 import DialogTitle from '@mui/material/DialogTitle';
+import FormControl from '@mui/material/FormControl';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
+
+import { CategoryService, CompanyService } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
-import { CategoryService, CompanyService } from 'src/services/api';
+
 import type { CategoryFormProps, CreateCategoryFormData, UpdateCategoryFormData } from './category.types';
 
 // Form data interface

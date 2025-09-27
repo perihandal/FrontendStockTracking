@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
-import Divider from '@mui/material/Divider';
 import Switch from '@mui/material/Switch';
+import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
@@ -16,8 +16,8 @@ import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { useAuth } from 'src/contexts/auth-context';
 import { CompanyService } from 'src/services/api';
+import { useAuth } from 'src/contexts/auth-context';
 
 import { Iconify } from 'src/components/iconify';
 

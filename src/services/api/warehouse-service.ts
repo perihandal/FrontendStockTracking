@@ -1,5 +1,4 @@
 import apiClient from './api-client';
-
 // Types
 export interface CreateWarehouseRequest {
   code: string;
@@ -46,6 +45,7 @@ export interface WarehouseStockDto {
   quantity: number;
   unit: string;
 }
+
 
 // API Response Types
 export interface ApiResponse<T> {

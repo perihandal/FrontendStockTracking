@@ -22,12 +22,15 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { Iconify } from 'src/components/iconify';
 import { CategoryService } from 'src/services/api';
+
+import { Iconify } from 'src/components/iconify';
+
+import { TableNoData } from '../table-no-data';
 import { CategoryForm } from '../category-form';
 import { CategoriesTableRow } from '../categories-table-row';
 import { CategoriesTableToolbar } from '../categories-table-toolbar';
-import { TableNoData } from '../table-no-data';
+
 import type { Category } from '../category.types';
 
 export function CategoriesView() {

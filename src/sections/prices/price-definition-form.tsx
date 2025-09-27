@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+
 import {
   Dialog,
   DialogTitle,
@@ -18,15 +19,18 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { PriceService } from 'src/services/api';
+import { StockService } from 'src/services/api';
+
+import { PriceType, Currency, getPriceTypeLabel, getCurrencyLabel } from './prices.types';
+
 import type {
   PriceDefinition,
   CreatePriceDefinitionFormData,
   UpdatePriceDefinitionFormData,
   PriceDefinitionFormProps,
 } from './prices.types';
-import { PriceType, Currency, getPriceTypeLabel, getCurrencyLabel } from './prices.types';
-import { PriceService } from 'src/services/api';
-import { StockService } from 'src/services/api';
+
 
 export function PriceDefinitionForm({
   open,

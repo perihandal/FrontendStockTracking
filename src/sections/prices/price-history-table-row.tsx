@@ -1,4 +1,6 @@
 import { useState } from 'react';
+
+import { useTheme } from '@mui/material/styles';
 import {
   TableRow,
   TableCell,
@@ -6,10 +8,8 @@ import {
   Stack,
   Box,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 
 import type { PriceHistoryDto } from './prices.types';
-import { Currency, getCurrencySymbol } from './prices.types';
 
 interface PriceHistoryTableRowProps {
   priceHistory: PriceHistoryDto;
@@ -18,19 +18,16 @@ interface PriceHistoryTableRowProps {
 export function PriceHistoryTableRow({ priceHistory }: PriceHistoryTableRowProps) {
   const theme = useTheme();
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('tr-TR', {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('tr-TR', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
 
-  const formatPrice = (price: number) => {
-    return `${price.toFixed(2)} ₺`;
-  };
+  const formatPrice = (price: number) => `${price.toFixed(2)} ₺`;
 
   const getPriceChangeColor = (oldPrice: number, newPrice: number) => {
     if (newPrice > oldPrice) {
@@ -101,13 +98,6 @@ export function PriceHistoryTableRow({ priceHistory }: PriceHistoryTableRowProps
         </Stack>
       </TableCell>
       
-      <TableCell>
-        <Chip
-          label={priceHistory.isActive ? 'Aktif' : 'Pasif'}
-          size="small"
-          color={priceHistory.isActive ? 'success' : 'error'}
-        />
-      </TableCell>
       
       <TableCell>
         <Chip

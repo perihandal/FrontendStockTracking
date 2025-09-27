@@ -1,33 +1,32 @@
 import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import CardContent from '@mui/material/CardContent';
+import CircularProgress from '@mui/material/CircularProgress';
 
+import { useRouter } from 'src/routes/hooks';
+
+import { useAuth } from 'src/contexts/auth-context';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { _posts, _tasks, _traffic, _timeline } from 'src/_mock';
-
-import { Iconify } from 'src/components/iconify';
-import { useAuth } from 'src/contexts/auth-context';
-import { useRouter } from 'src/routes/hooks';
-import { AdminOnly, CanCreate } from 'src/components/permission';
-
 import { CompanyService, StockService, StockTransactionService, WarehouseService } from 'src/services/api';
 
-import { AnalyticsConversionRates } from '../analytics-conversion-rates';
-import { AnalyticsCurrentSubject } from '../analytics-current-subject';
-import { AnalyticsCurrentVisits } from '../analytics-current-visits';
+import { Iconify } from 'src/components/iconify';
+import { AdminOnly, CanCreate } from 'src/components/permission';
+
 import { AnalyticsNews } from '../analytics-news';
-import { AnalyticsOrderTimeline } from '../analytics-order-timeline';
 import { AnalyticsTasks } from '../analytics-tasks';
-import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
-import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
 import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
+import { AnalyticsCurrentVisits } from '../analytics-current-visits';
+import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
+import { AnalyticsOrderTimeline } from '../analytics-order-timeline';
+import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
+import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 
 // ----------------------------------------------------------------------
 

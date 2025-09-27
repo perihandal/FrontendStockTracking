@@ -1,6 +1,7 @@
+import { useAuth } from 'src/contexts/auth-context';
+
 import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
-import { useAuth } from 'src/contexts/auth-context';
 
 // ----------------------------------------------------------------------
 

@@ -12,7 +12,7 @@ interface TableNoDataProps {
 export function TableNoData({ query }: TableNoDataProps) {
   return (
     <Box sx={{ textAlign: 'center', py: 4 }}>
-      <Iconify icon="solar:file-search-bold" sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+      <Iconify icon="solar:cart-3-bold" sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
       <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
         {query ? 'Arama kriterlerinize uygun kategori bulunamadı' : 'Henüz kategori bulunmuyor'}
       </Typography>

@@ -1,10 +1,12 @@
 import { useState } from 'react';
+
 import {
   Box,
   TextField,
   InputAdornment,
   Stack,
 } from '@mui/material';
+
 import { Iconify } from 'src/components/iconify';
 
 interface PriceHistoryTableToolbarProps {

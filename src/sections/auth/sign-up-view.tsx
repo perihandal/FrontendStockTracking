@@ -12,10 +12,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { useRouter } from 'src/routes/hooks';
 
-import { Iconify } from 'src/components/iconify';
 import { AuthService } from 'src/services/api';
 
-// ----------------------------------------------------------------------
+import { Iconify } from 'src/components/iconify';
+
+
 
 export function SignUpView() {
   const router = useRouter();
@@ -297,7 +298,7 @@ export function SignUpView() {
             mb: 0.25 
           }}
         >
-          StokNet'e Kayıt Ol
+          StokNet&apos;e Kayıt Ol
         </Typography>
         <Typography
           variant="body2"
@@ -316,7 +317,7 @@ export function SignUpView() {
             mt: 0.25, // Daha da azaltıldı
           }}
         >
-          Zaten hesabınız var mı?{' '}
+          Zaten hesabınız var mı? 
           <Typography
             component="span"
             variant="body2"

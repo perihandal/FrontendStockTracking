@@ -1,9 +1,12 @@
 import type { ChangeEvent } from 'react';
+
 import React, { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
+import Tabs from '@mui/material/Tabs';
 import Alert from '@mui/material/Alert';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
@@ -20,19 +23,20 @@ import DialogContent from '@mui/material/DialogContent';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
+
+import { useAuthContext } from 'src/contexts/auth-context';
+import { CategoryService, UserService } from 'src/services/api';
 
 import { Iconify } from 'src/components/iconify';
-import { CategoryService, UserService } from 'src/services/api';
-import { useAuthContext } from 'src/contexts/auth-context';
-import { MainGroupForm } from '../main-group-form';
-import { SubGroupForm } from '../sub-group-form';
-import { MainGroupsTableRow } from '../main-groups-table-row';
-import { SubGroupsTableRow } from '../sub-groups-table-row';
-import { MainGroupsTableToolbar } from '../main-groups-table-toolbar';
-import { SubGroupsTableToolbar } from '../sub-groups-table-toolbar';
+
 import { TableNoData } from '../table-no-data';
+import { SubGroupForm } from '../sub-group-form';
+import { MainGroupForm } from '../main-group-form';
+import { SubGroupsTableRow } from '../sub-groups-table-row';
+import { MainGroupsTableRow } from '../main-groups-table-row';
+import { SubGroupsTableToolbar } from '../sub-groups-table-toolbar';
+import { MainGroupsTableToolbar } from '../main-groups-table-toolbar';
+
 import type { MainGroup, SubGroup } from '../groups.types';
 
 interface TabPanelProps {
@@ -98,16 +102,14 @@ export function GroupsView() {
         console.log('✅ Main groups loaded successfully:', response.data.length, 'items');
         
         // Backend'den gelen veriyi frontend formatına çevir
-        const formattedMainGroups: MainGroup[] = response.data.map((item: any) => {
-          return {
-            id: item.id,
-            code: item.code,
-            name: item.name,
-            isActive: item.isActive,
-            userId: item.userId || 1,
-            userName: '', // Artık kullanılmıyor
-          };
-        });
+        const formattedMainGroups: MainGroup[] = response.data.map((item: any) => ({
+          id: item.id,
+          code: item.code,
+          name: item.name,
+          isActive: item.isActive,
+          userId: item.userId || 1,
+          userName: '', // Artık kullanılmıyor
+        }));
         setMainGroups(formattedMainGroups);
         console.log('🎯 Formatted main groups set:', formattedMainGroups.length, 'items');
       } else if (response.errorMessage) {
